@@ -1,0 +1,48 @@
+{
+  "runtime": "Local Uvicorn over loopback HTTP",
+  "python_version": "3.10.20",
+  "model_version": "churnguard-hgb-calibrated-v1",
+  "verified_endpoints": [
+    {
+      "method": "GET",
+      "path": "/health",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/ready",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/model-info",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/predict",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/batch-predict",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/rank",
+      "status_code": 200
+    },
+    {
+      "method": "POST",
+      "path": "/monitor/drift",
+      "status_code": 200
+    },
+    {
+      "method": "GET",
+      "path": "/metrics",
+      "status_code": 200
+    }
+  ],
+  "docker_status": "Build attempted; Docker CLI 28.4.0 present but daemon unavailable. Build/run untested locally."
+}

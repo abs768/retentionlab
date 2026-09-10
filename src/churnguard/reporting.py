@@ -7,6 +7,7 @@ generated tables, so the document cannot drift from -- or invent claims beyond
 
 from __future__ import annotations
 
+import json
 import logging
 import re
 import subprocess
@@ -76,8 +77,11 @@ def write_resume_facts(
     add("")
     add(
         "Every figure below was read back from artifacts produced by "
-        "`python scripts/run_pipeline.py`. Nothing here is estimated or illustrative."
+        "the analytical pipeline and the serving verification/benchmark scripts. "
+        "Experiment effects are assumptions; serving measurements are local."
     )
+    add("")
+    add("## DATA SCIENCE")
     add("")
     add("DATA:")
     add(f"- {summary['n_rows']:,} customer rows, {summary['n_raw_columns']} raw columns "
@@ -168,14 +172,45 @@ def write_resume_facts(
         )
     add("")
 
-    add("ENGINEERING:")
-    if n_tests is not None:
-        add(f"- {n_tests} pytest tests, all passing")
-    add("- single reproducibility command: `python scripts/run_pipeline.py`")
-    add("- GitHub Actions CI installs dependencies and runs the test suite")
-    add(f"- artifacts produced by one run: {len(summary['artifacts'])}")
-    for name in sorted(summary["artifacts"].values()):
-        add(f"  - {name}")
+    add("## ML ENGINEERING")
+    add("")
+    verification_path = config.REPORTS_DIR / "serving_verification.json"
+    if verification_path.exists():
+        verified = json.loads(verification_path.read_text())
+        results = verified["test_results"]
+        add(f"- {verified['endpoint_count']} service endpoints; "
+            f"maximum vectorized batch: {verified['max_batch_size']} customers")
+        add(f"- checksum, feature-contract and startup smoke verification: "
+            f"{verified['model_integrity']}; model {verified['model_version']}")
+        add(f"- PSI on {', '.join(verified['numeric_drift_features'])}; "
+            f"categorical total variation on {', '.join(verified['categorical_drift_features'])}")
+        add(f"- training-only drift reference: {verified['reference_row_count']:,} rows")
+        add(f"- {len(verified['metrics'])} Prometheus metric families; instance-local counters")
+        add(f"- executed automated tests: {results['tests']}; "
+            f"failures {results['failures']}, errors {results['errors']}, "
+            f"skipped {results['skipped']}")
+        add(f"- CI: {verified['ci']}")
+    elif n_tests is not None:
+        add(f"- {n_tests} tests collected; serving verification has not been recorded")
+    benchmark_path = config.REPORTS_DIR / "serving_benchmark.json"
+    if benchmark_path.exists():
+        benchmark = json.loads(benchmark_path.read_text())
+        for row in benchmark["results"]:
+            direct, http = row["direct_model"], row["fastapi_testclient"]
+            add(f"- local batch {row['batch_size']}: direct p50/p95 "
+                f"{direct['p50_ms']:.2f}/{direct['p95_ms']:.2f} ms; FastAPI TestClient "
+                f"{http['p50_ms']:.2f}/{http['p95_ms']:.2f} ms (not network latency)")
+    runtime_path = config.REPORTS_DIR / "runtime_validation.json"
+    if runtime_path.exists():
+        runtime = json.loads(runtime_path.read_text())
+        add(f"- Docker: {runtime['docker_status']}")
+        add(f"- local Uvicorn HTTP endpoints verified: {len(runtime['verified_endpoints'])}")
+    deployment_path = config.REPORTS_DIR / "deployment.json"
+    if deployment_path.exists():
+        deployment = json.loads(deployment_path.read_text())
+        add(f"- deployment: {deployment['status']}")
+    add("- no production traffic, causal retention uplift, "
+        "or globally aggregated telemetry measured")
     add("")
 
     while lines and not lines[-1]:

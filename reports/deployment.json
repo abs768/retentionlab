@@ -1,0 +1,9 @@
+{
+  "provider": "Vercel",
+  "public_url": null,
+  "model_version": "churnguard-hgb-calibrated-v1",
+  "verified_endpoints": [],
+  "status": "Not deployed: Vercel CLI unavailable; authenticated CLI session could not be checked.",
+  "cli_available": false,
+  "authentication_status": "not checked without CLI"
+}

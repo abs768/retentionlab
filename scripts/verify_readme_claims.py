@@ -7,9 +7,8 @@ script re-reads each claimed number from ``reports/`` and exits non-zero on any
 mismatch, so "every number in this README was produced by the pipeline" is a
 checkable statement rather than a promise.
 
-It is deliberately not part of CI: a different scikit-learn or SciPy build can
-legitimately shift the last digits, and CI should not fail for that. Run it
-after regenerating artifacts in the environment that produced them.
+This audit runs in CI against committed evidence and the installed service contract.
+Run it after regenerating artifacts; scientific dependencies are pinned for serving.
 
 Usage:
     python scripts/verify_readme_claims.py
@@ -259,7 +258,59 @@ def check_test_count(checker: ClaimChecker) -> None:
     )
     match = re.search(r"(\d+) tests? collected", completed.stdout)
     collected = int(match.group(1)) if match else -1
-    checker.check("README test count = 37", 37, collected)
+    readme = (ROOT / "README.md").read_text()
+    claimed = re.search(r"Automated tests: \*\*(\d+)\*\*", readme)
+    expected = int(claimed.group(1)) if claimed else -2
+    checker.check("README automated test count", expected, collected)
+    checker.check("pytest collection succeeded", 0, completed.returncode)
+
+
+def check_serving(checker: ClaimChecker) -> None:
+    """Parse new README numbers rather than maintaining a second hand-typed truth."""
+    from app.config import MAX_BATCH_SIZE, Settings
+    from app.main import create_app
+    from app.model_service import artifact_sha256
+    from app.monitoring import load_reference
+    from fastapi.routing import APIRoute
+
+    readme = (ROOT / "README.md").read_text()
+    settings = Settings()
+    metadata = json.loads(settings.metadata_path.read_text())
+    reference = load_reference(settings.reference_path)
+    api = create_app()
+    actuals = {
+        "Service endpoints": sum(isinstance(route, APIRoute) for route in api.routes),
+        "Maximum batch size": MAX_BATCH_SIZE,
+        "Drift features": len(reference["numeric"]) + len(reference["categorical"]),
+        "Training reference rows": reference["row_count"],
+        "Model artifact size": settings.model_path.stat().st_size,
+    }
+    for label, actual in actuals.items():
+        match = re.search(re.escape(label) + r": \*\*(\d+)\*\*", readme)
+        checker.check(label, int(match.group(1)) if match else -1, actual)
+    sha_match = re.search(r"Artifact SHA256: `([0-9a-f]{64})`", readme)
+    sha = artifact_sha256(settings.model_path.read_bytes())
+    checker.check("README artifact SHA matches trusted metadata and bytes", 1,
+                  int(sha_match is not None and sha_match.group(1) == metadata["sha256"] == sha))
+    benchmark = json.loads((REPORTS / "serving_benchmark.json").read_text())
+    checker.check("Benchmark artifact SHA matches served model", 1,
+                  int(benchmark["artifact_sha256"] == sha))
+    block = readme.split("<!-- BENCHMARK_START -->")[1].split("<!-- BENCHMARK_END -->")[0]
+    lines = [line for line in block.splitlines() if re.match(r"\| \d+ \|", line)]
+    checker.check("Benchmark row count", len(benchmark["results"]), len(lines))
+    by_size = {int(line.split("|")[1].strip()): line for line in lines}
+    for row in benchmark["results"]:
+        cells = by_size.get(row["batch_size"], "").split("|")[2:-1]
+        claimed = [float(cell.strip()) for cell in cells]
+        actual = [row[mode][stat] for mode in ("direct_model", "fastapi_testclient")
+                  for stat in ("mean_ms", "p50_ms", "p95_ms")]
+        for index, value in enumerate(actual):
+            checker.check(f"Benchmark batch {row['batch_size']} statistic {index}",
+                          claimed[index] if index < len(claimed) else -1, round(value, 2))
+    for key, pattern in (("iterations", r"(\d+) timed iterations"),
+                         ("warmup_iterations", r"(\d+) warm-up iterations")):
+        match = re.search(pattern, block)
+        checker.check(f"Benchmark {key}", int(match.group(1)) if match else -1, benchmark[key])
 
 
 def main() -> int:
@@ -278,6 +329,7 @@ def main() -> int:
         checker, pd.read_csv(TABLES / "chi_square_tests.csv"), chi_square_details
     )
     check_test_count(checker)
+    check_serving(checker)
 
     for _, label, claimed, actual in checker.failures:
         print(f"MISMATCH  {label}: README={claimed}  artifact={actual}")

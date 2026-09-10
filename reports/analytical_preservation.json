@@ -1,0 +1,33 @@
+{
+  "baseline_commit": "fe855b81bc6397d8bc375418be011689111ff83e",
+  "baseline_tests_passed": 37,
+  "baseline_readme_checks_passed": 107,
+  "baseline_lint": "passed",
+  "python310_pipeline_rerun": "passed",
+  "run_summary_exactly_equal": true,
+  "probability_comparison_on_rerun": {
+    "train": {
+      "maximum_absolute_probability_difference": 3.3306690738754696e-16,
+      "ranking_identical": true
+    },
+    "validation": {
+      "maximum_absolute_probability_difference": 2.220446049250313e-16,
+      "ranking_identical": true
+    },
+    "test": {
+      "maximum_absolute_probability_difference": 2.220446049250313e-16,
+      "ranking_identical": true
+    }
+  },
+  "csv_numeric_max_absolute_differences_on_rerun": {
+    "validation_model_comparison.csv": 8.326672684688674e-17,
+    "test_metrics.csv": 0.0,
+    "retention_policy.csv": 0.0,
+    "chi_square_tests.csv": 1.4149498560666738e-73,
+    "experiment_design.csv": 3.0531133177191805e-16,
+    "calibration_comparison.csv": 0.0
+  },
+  "original_analytical_artifacts_preserved_byte_for_byte_except_updated_resume": true,
+  "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
+  "note": "Kept the original model and analytical evidence. Python 3.10 rerun differed at floating-point roundoff in fitted sigmoid coefficients and probabilities (maximum 3.33e-16), serialization and PNG rendering. All rankings and the full run_summary were exactly equal. Serving uses original model bytes."
+}

@@ -1,0 +1,69 @@
+{
+  "python_version": "3.10.20",
+  "test_results": {
+    "tests": 72,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "lint": "passed",
+  "model_integrity": "passed",
+  "model_version": "churnguard-hgb-calibrated-v1",
+  "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "method": "GET",
+      "path": "/ready"
+    },
+    {
+      "method": "GET",
+      "path": "/model-info"
+    },
+    {
+      "method": "POST",
+      "path": "/predict"
+    },
+    {
+      "method": "POST",
+      "path": "/batch-predict"
+    },
+    {
+      "method": "POST",
+      "path": "/rank"
+    },
+    {
+      "method": "POST",
+      "path": "/monitor/drift"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics"
+    }
+  ],
+  "endpoint_count": 8,
+  "max_batch_size": 1000,
+  "numeric_drift_features": [
+    "tenure",
+    "MonthlyCharges",
+    "TotalCharges"
+  ],
+  "categorical_drift_features": [
+    "Contract",
+    "InternetService",
+    "PaymentMethod"
+  ],
+  "reference_row_count": 4929,
+  "metrics": [
+    "churnguard_inference_requests_total",
+    "churnguard_inference_errors_total",
+    "churnguard_predictions_total",
+    "churnguard_inference_latency_seconds",
+    "churnguard_batch_size",
+    "churnguard_drift_checks_total"
+  ],
+  "ci": "Configured for Python 3.10/3.12 and Docker; remote run not observed"
+}

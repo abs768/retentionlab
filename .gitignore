@@ -34,14 +34,13 @@ Thumbs.db
 *.tmp
 *.bak
 
-# --- Generated artifacts ---------------------------------------------------
-# reports/ and data/raw/ ARE committed: the raw CSV (~950 KB, IBM's public
-# fictional sample) keeps the project reproducible offline, and the tables,
-# figures and reports are the evidence behind every number in the README.
-#
-# These two are excluded because they are large, derivable in ~20 s by
-# `python scripts/run_pipeline.py`, and (for the model) fragile across
-# scikit-learn versions:
+# Raw data is downloaded and verified; see data/README.md for provenance.
+data/raw/*.csv
 data/processed/*.csv
 models/*.joblib
+!models/final_model.joblib
 !**/.gitkeep
+.env
+.env.*
+.vercel/
+work/

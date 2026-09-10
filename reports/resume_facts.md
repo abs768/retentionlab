@@ -1,6 +1,8 @@
 # ChurnGuard - verified project facts
 
-Every figure below was read back from artifacts produced by `python scripts/run_pipeline.py`. Nothing here is estimated or illustrative.
+Every figure below was read back from artifacts produced by the analytical pipeline and the serving verification/benchmark scripts. Experiment effects are assumptions; serving measurements are local.
+
+## DATA SCIENCE
 
 DATA:
 - 7,043 customer rows, 21 raw columns (IBM Telco Customer Churn, fictional sample dataset)
@@ -43,28 +45,20 @@ ASSOCIATION TESTS (observational, pre-specified, not causal):
 - churn vs InternetService: chi-square 732.3 (df 2), p = 9.57e-160, Cramer's V 0.322
 - churn vs PaperlessBilling: chi-square 258.3 (df 1), p = 4.07e-58, Cramer's V 0.191
 
-ENGINEERING:
-- 37 pytest tests, all passing
-- single reproducibility command: `python scripts/run_pipeline.py`
-- GitHub Actions CI installs dependencies and runs the test suite
-- artifacts produced by one run: 20
-  - data/processed/test.csv
-  - data/processed/train.csv
-  - data/processed/validation.csv
-  - models/final_model.joblib
-  - reports/figures/calibration_curve.png
-  - reports/figures/confusion_matrix.png
-  - reports/figures/cumulative_gains.png
-  - reports/figures/precision_recall_curve.png
-  - reports/figures/roc_curve.png
-  - reports/resume_facts.md
-  - reports/run_summary.json
-  - reports/tables/calibration_comparison.csv
-  - reports/tables/chi_square_details.json
-  - reports/tables/chi_square_tests.csv
-  - reports/tables/experiment_design.csv
-  - reports/tables/retention_policy.csv
-  - reports/tables/test_metrics.csv
-  - reports/tables/test_metrics.json
-  - reports/tables/validation_model_comparison.csv
-  - reports/validation_report.json
+## ML ENGINEERING
+
+- 8 service endpoints; maximum vectorized batch: 1000 customers
+- checksum, feature-contract and startup smoke verification: passed; model churnguard-hgb-calibrated-v1
+- PSI on tenure, MonthlyCharges, TotalCharges; categorical total variation on Contract, InternetService, PaymentMethod
+- training-only drift reference: 4,929 rows
+- 6 Prometheus metric families; instance-local counters
+- executed automated tests: 72; failures 0, errors 0, skipped 0
+- CI: Configured for Python 3.10/3.12 and Docker; remote run not observed
+- local batch 1: direct p50/p95 14.06/14.39 ms; FastAPI TestClient 15.66/16.32 ms (not network latency)
+- local batch 10: direct p50/p95 14.44/16.19 ms; FastAPI TestClient 16.11/16.68 ms (not network latency)
+- local batch 100: direct p50/p95 16.58/17.17 ms; FastAPI TestClient 19.55/20.89 ms (not network latency)
+- local batch 500: direct p50/p95 27.27/29.91 ms; FastAPI TestClient 34.60/36.15 ms (not network latency)
+- Docker: Build attempted; Docker CLI 28.4.0 present but daemon unavailable. Build/run untested locally.
+- local Uvicorn HTTP endpoints verified: 8
+- deployment: Not deployed: Vercel CLI unavailable; authenticated CLI session could not be checked.
+- no production traffic, causal retention uplift, or globally aggregated telemetry measured

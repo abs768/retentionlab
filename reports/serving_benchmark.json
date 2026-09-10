@@ -1,0 +1,72 @@
+{
+  "benchmark_method": "Local direct inference and FastAPI TestClient /batch-predict",
+  "direct_scope": "predict_proba on a prebuilt DataFrame; no loading or adapter timing",
+  "testclient_scope": "JSON, validation, adapter, inference, response; no network",
+  "python_version": "3.10.20",
+  "sklearn_version": "1.6.1",
+  "platform": "Darwin 25.5.0 arm64",
+  "cpu": "arm",
+  "logical_cpu_count": 8,
+  "native_threads": {
+    "OMP_NUM_THREADS": "1",
+    "OPENBLAS_NUM_THREADS": "1"
+  },
+  "model_version": "churnguard-hgb-calibrated-v1",
+  "artifact_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
+  "iterations": 50,
+  "warmup_iterations": 5,
+  "results": [
+    {
+      "batch_size": 1,
+      "direct_model": {
+        "mean_ms": 14.081786694005132,
+        "p50_ms": 14.05987550970167,
+        "p95_ms": 14.3872587592341
+      },
+      "fastapi_testclient": {
+        "mean_ms": 15.732332500629127,
+        "p50_ms": 15.664792153984308,
+        "p95_ms": 16.317426960449666
+      }
+    },
+    {
+      "batch_size": 10,
+      "direct_model": {
+        "mean_ms": 15.723910857923329,
+        "p50_ms": 14.436728903092444,
+        "p95_ms": 16.185829439200457
+      },
+      "fastapi_testclient": {
+        "mean_ms": 16.13610092084855,
+        "p50_ms": 16.105937538668513,
+        "p95_ms": 16.680147941224277
+      }
+    },
+    {
+      "batch_size": 100,
+      "direct_model": {
+        "mean_ms": 16.669654143042862,
+        "p50_ms": 16.58425002824515,
+        "p95_ms": 17.17386421514675
+      },
+      "fastapi_testclient": {
+        "mean_ms": 19.67052662745118,
+        "p50_ms": 19.55293701030314,
+        "p95_ms": 20.889887411613017
+      }
+    },
+    {
+      "batch_size": 500,
+      "direct_model": {
+        "mean_ms": 27.67013411037624,
+        "p50_ms": 27.26802055258304,
+        "p95_ms": 29.909657838288695
+      },
+      "fastapi_testclient": {
+        "mean_ms": 35.27174492366612,
+        "p50_ms": 34.59843748714775,
+        "p95_ms": 36.15124623756856
+      }
+    }
+  ]
+}

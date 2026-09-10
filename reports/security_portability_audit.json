@@ -1,0 +1,25 @@
+{
+  "scope": "Current tracked source and artifacts, including binary model; raw CSV removed from tracking and retained locally.",
+  "credential_findings": 0,
+  "personal_absolute_path_findings": 0,
+  "benign_matches": [
+    {
+      "file": "scripts/benchmark_service.py",
+      "term": ".env"
+    },
+    {
+      "file": "tests/test_serving.py",
+      "term": "/Users/"
+    },
+    {
+      "file": ".gitignore",
+      "term": ".env"
+    }
+  ],
+  "benign_match_explanation": "A test asserts a local-path prefix is absent; ignore rules exclude environment files; os.environ accesses are configuration, not secrets.",
+  "customer_payload_logging": "No payload logging found; error tests verify no customer IDs or exception payloads in logs.",
+  "model_paths": "Derived from repository/package location, never hard-coded user paths.",
+  "frozen_artifacts_compared": 17,
+  "frozen_artifacts_byte_identical": true,
+  "history_note": "Original commit and its raw CSV remain in history; no history rewrite or push."
+}
