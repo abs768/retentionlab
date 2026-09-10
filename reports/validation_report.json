@@ -1,0 +1,99 @@
+{
+  "dataset": "telco_customer_churn.csv",
+  "n_rows": 7043,
+  "n_columns": 21,
+  "checks": {
+    "schema": {
+      "expected_columns": [
+        "customerID",
+        "gender",
+        "SeniorCitizen",
+        "Partner",
+        "Dependents",
+        "tenure",
+        "PhoneService",
+        "MultipleLines",
+        "InternetService",
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+        "Contract",
+        "PaperlessBilling",
+        "PaymentMethod",
+        "MonthlyCharges",
+        "TotalCharges",
+        "Churn"
+      ],
+      "observed_columns": [
+        "customerID",
+        "gender",
+        "SeniorCitizen",
+        "Partner",
+        "Dependents",
+        "tenure",
+        "PhoneService",
+        "MultipleLines",
+        "InternetService",
+        "OnlineSecurity",
+        "OnlineBackup",
+        "DeviceProtection",
+        "TechSupport",
+        "StreamingTV",
+        "StreamingMovies",
+        "Contract",
+        "PaperlessBilling",
+        "PaymentMethod",
+        "MonthlyCharges",
+        "TotalCharges",
+        "Churn"
+      ],
+      "missing_columns": [],
+      "unexpected_columns": [],
+      "passed": true
+    },
+    "row_count": {
+      "observed": 7043,
+      "expected": 7043,
+      "passed": true
+    },
+    "column_count": {
+      "observed": 21
+    },
+    "duplicate_customer_ids": {
+      "count": 0,
+      "passed": true
+    },
+    "duplicate_rows": {
+      "count": 0
+    },
+    "target": {
+      "observed_values": [
+        "No",
+        "Yes"
+      ],
+      "allowed_values": [
+        "No",
+        "Yes"
+      ],
+      "positive_prevalence": 0.2653698707936959,
+      "positive_count": 1869,
+      "passed": true
+    },
+    "missing_values_raw": {
+      "columns": {}
+    },
+    "numeric_coercion": {
+      "TotalCharges": {
+        "raw_dtype": "object",
+        "values_failing_numeric_parse": 11
+      }
+    }
+  },
+  "warnings": [
+    "TotalCharges: 11 value(s) could not be parsed as numeric and were coerced to NaN (imputed inside the training pipeline)."
+  ],
+  "passed": true
+}

@@ -1,0 +1,47 @@
+# --- Python ---------------------------------------------------------------
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+env/
+
+# --- Test / lint / type caches --------------------------------------------
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+.coverage.*
+htmlcov/
+.tox/
+
+# --- Notebooks ------------------------------------------------------------
+.ipynb_checkpoints/
+
+# --- OS / editor metadata -------------------------------------------------
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*~
+
+# --- Logs / scratch -------------------------------------------------------
+*.log
+*.tmp
+*.bak
+
+# --- Generated artifacts ---------------------------------------------------
+# reports/ and data/raw/ ARE committed: the raw CSV (~950 KB, IBM's public
+# fictional sample) keeps the project reproducible offline, and the tables,
+# figures and reports are the evidence behind every number in the README.
+#
+# These two are excluded because they are large, derivable in ~20 s by
+# `python scripts/run_pipeline.py`, and (for the model) fragile across
+# scikit-learn versions:
+data/processed/*.csv
+models/*.joblib
+!**/.gitkeep

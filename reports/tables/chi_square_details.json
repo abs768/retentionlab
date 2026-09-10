@@ -1,0 +1,74 @@
+{
+  "Contract": {
+    "feature": "Contract",
+    "contingency_table": {
+      "No": {
+        "Month-to-month": 2220,
+        "One year": 1307,
+        "Two year": 1647
+      },
+      "Yes": {
+        "Month-to-month": 1655,
+        "One year": 166,
+        "Two year": 48
+      }
+    },
+    "churn_rate_by_level": {
+      "Month-to-month": 0.4271,
+      "One year": 0.1127,
+      "Two year": 0.0283
+    },
+    "chi2_statistic": 1184.5965720837926,
+    "p_value": 5.863038300673391e-258,
+    "degrees_of_freedom": 2,
+    "cramers_v": 0.4101156965761409,
+    "n_observations": 7043
+  },
+  "InternetService": {
+    "feature": "InternetService",
+    "contingency_table": {
+      "No": {
+        "DSL": 1962,
+        "Fiber optic": 1799,
+        "No": 1413
+      },
+      "Yes": {
+        "DSL": 459,
+        "Fiber optic": 1297,
+        "No": 113
+      }
+    },
+    "churn_rate_by_level": {
+      "DSL": 0.1896,
+      "Fiber optic": 0.4189,
+      "No": 0.074
+    },
+    "chi2_statistic": 732.309589667794,
+    "p_value": 9.571788222840544e-160,
+    "degrees_of_freedom": 2,
+    "cramers_v": 0.32245455521230887,
+    "n_observations": 7043
+  },
+  "PaperlessBilling": {
+    "feature": "PaperlessBilling",
+    "contingency_table": {
+      "No": {
+        "No": 2403,
+        "Yes": 2771
+      },
+      "Yes": {
+        "No": 469,
+        "Yes": 1400
+      }
+    },
+    "churn_rate_by_level": {
+      "No": 0.1633,
+      "Yes": 0.3357
+    },
+    "chi2_statistic": 258.27764906707307,
+    "p_value": 4.073354668665985e-58,
+    "degrees_of_freedom": 1,
+    "cramers_v": 0.19149814355338285,
+    "n_observations": 7043
+  }
+}
