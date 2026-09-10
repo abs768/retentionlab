@@ -73,7 +73,7 @@ def write_resume_facts(
     lines: list[str] = []
     add = lines.append
 
-    add("# ChurnGuard - verified project facts")
+    add("# RetentionLab - verified project facts")
     add("")
     add(
         "Every figure below was read back from artifacts produced by "
@@ -205,13 +205,29 @@ def write_resume_facts(
         runtime = json.loads(runtime_path.read_text())
         add(f"- Docker: {runtime['docker_status']}")
         add(f"- local Uvicorn HTTP endpoints verified: {len(runtime['verified_endpoints'])}")
-    deployment_path = config.REPORTS_DIR / "deployment.json"
-    if deployment_path.exists():
-        deployment = json.loads(deployment_path.read_text())
-        add(f"- deployment: {deployment['status']}")
     add("- no production traffic, causal retention uplift, "
         "or globally aggregated telemetry measured")
     add("")
+
+    deployment_path = config.REPORTS_DIR / "deployment.json"
+    if deployment_path.exists():
+        deployment = json.loads(deployment_path.read_text())
+        add("## DEPLOYMENT")
+        add("")
+        if deployment.get("status") == "verified" and deployment.get("public_url"):
+            # Only claim a deployment once its public endpoints have actually answered.
+            add(f"- deployed on {deployment['provider']} "
+                f"(project {deployment['vercel_project']}): {deployment['public_url']}")
+            add(f"- {deployment['endpoints_verified']} of "
+                f"{deployment['endpoints_total']} public HTTPS endpoints exercised and verified "
+                f"on {deployment['verification_timestamp_utc']}")
+            add(f"- serving model {deployment['model_version']} with startup checksum "
+                "verification, from the same artifact bytes verified locally")
+            add("- public response times include cold starts and are not a latency benchmark; "
+                "/metrics counters are instance-local, not globally aggregated")
+        else:
+            add(f"- deployment: {deployment.get('status', 'unknown')}")
+        add("")
 
     while lines and not lines[-1]:
         lines.pop()  # no trailing blank line at end of file

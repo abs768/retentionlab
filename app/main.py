@@ -6,11 +6,12 @@ from time import perf_counter
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.exceptions import RequestValidationError
-from fastapi.responses import JSONResponse, Response
+from fastapi.responses import HTMLResponse, JSONResponse, Response
 from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
 
-from app.config import Settings
+from app.config import PUBLIC_NAME, PUBLIC_TAGLINE, Settings
 from app.inference import customers_to_frame, predict_customers
+from app.landing import render_landing_page
 from app.metrics import INFERENCE_PATHS, ServiceMetrics
 from app.model_service import ModelService
 from app.monitoring import check_drift, load_reference
@@ -34,7 +35,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @asynccontextmanager
     async def lifespan(api: FastAPI):
-        logger.info("Starting ChurnGuard API")
+        logger.info("Starting %s API", PUBLIC_NAME)
         api.state.service = None
         api.state.reference = None
         try:
@@ -49,7 +50,15 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         api.state.service = None
         api.state.reference = None
 
-    api = FastAPI(title="ChurnGuard Retention Intelligence", version="1.0.0", lifespan=lifespan)
+    api = FastAPI(
+        title=f"{PUBLIC_NAME} — {PUBLIC_TAGLINE}",
+        description=(
+            "Calibrated churn scoring, capacity-constrained retention ranking, and "
+            "drift monitoring over a frozen, checksum-verified model artifact."
+        ),
+        version="1.0.0",
+        lifespan=lifespan,
+    )
     api.state.service = None
     api.state.reference = None
     api.state.metrics = metrics
@@ -97,6 +106,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             raise HTTPException(status_code=503, detail="Model inference unavailable") from None
         metrics.predictions.inc(len(predictions))
         return predictions
+
+    @api.get("/", response_class=HTMLResponse, include_in_schema=False)
+    def landing():
+        """Recruiter-facing overview; renders generated, artifact-derived facts."""
+        return HTMLResponse(render_landing_page(settings.landing_facts_path))
 
     @api.get("/health")
     def health():

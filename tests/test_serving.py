@@ -271,3 +271,36 @@ def test_frozen_test_metrics_unchanged(splits, client):
     expected = json.loads((REPORTS_DIR / "tables/test_metrics.json").read_text())
     for metric, value in expected.items():
         assert actual[metric] == pytest.approx(value, abs=1e-12)
+
+
+def test_landing_page_serves_verified_facts(client):
+    """GET / renders the recruiter page from generated, artifact-derived facts."""
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/html")
+    body = response.text
+    assert "RetentionLab" in body
+    assert "End-to-End Customer Retention Analytics Platform" in body
+    for link in ("/docs", "/model-info", "/health"):
+        assert f'href="{link}"' in body
+
+
+def test_landing_metrics_match_canonical_run_summary(client):
+    """Every headline number on the page traces back to reports/run_summary.json."""
+    summary = json.loads((Settings().landing_facts_path.parents[2] / "reports"
+                          / "run_summary.json").read_text())
+    top20 = next(r for r in summary["policy"] if abs(r["capacity_fraction"] - 0.20) < 1e-9)
+    body = client.get("/").text
+
+    assert f"{summary['n_rows']:,}" in body
+    assert f"{summary['test_metrics']['roc_auc']:.3f}" in body
+    assert f"{summary['test_metrics']['pr_auc']:.3f}" in body
+    assert f"{top20['churner_capture_rate'] * 100:.1f}%" in body
+    assert f"{top20['lift_vs_random']:.2f}x" in body
+
+
+def test_landing_page_does_not_leak_local_paths(client):
+    """The public page must never expose developer filesystem paths."""
+    body = client.get("/").text
+    assert "/Users/" not in body
+    assert "bhavanishankar" not in body

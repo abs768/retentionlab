@@ -1,0 +1,51 @@
+{
+  "name": "RetentionLab",
+  "tagline": "End-to-End Customer Retention Analytics Platform",
+  "model_version": "churnguard-hgb-calibrated-v1",
+  "source": "reports/run_summary.json",
+  "headline_metrics": [
+    {
+      "value": "7,043",
+      "label": "Customer Records",
+      "detail": "IBM fictional Telco sample"
+    },
+    {
+      "value": "0.855",
+      "label": "ROC-AUC",
+      "detail": "Held-out test split, scored once"
+    },
+    {
+      "value": "0.670",
+      "label": "PR-AUC",
+      "detail": "Against 26.5% prevalence"
+    },
+    {
+      "value": "51.1%",
+      "label": "Observed Churners Captured in Top 20% Risk Cohort",
+      "detail": "143 of 280 test-set churners"
+    },
+    {
+      "value": "2.55x",
+      "label": "Lift Over Random Targeting",
+      "detail": "Retrospective ranking, not a causal effect"
+    },
+    {
+      "value": "75",
+      "label": "Automated Tests",
+      "detail": "Analytics, serving, and monitoring"
+    }
+  ],
+  "capabilities": [
+    "Leakage-Safe Modeling",
+    "Gradient Boosting",
+    "Probability Calibration",
+    "Capacity-Constrained Targeting",
+    "Statistical Experiment Design",
+    "Vectorized Batch Inference",
+    "Model Artifact Verification",
+    "Drift Monitoring",
+    "Prometheus Observability"
+  ],
+  "brier_score": 0.1324,
+  "experiment_note": "A 3-point absolute churn reduction would need about 3,915 customers per arm at 80% power."
+}

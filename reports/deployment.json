@@ -1,9 +1,79 @@
 {
   "provider": "Vercel",
-  "public_url": null,
+  "vercel_project": "retentionlab",
+  "public_url": "https://retentionlab-rho.vercel.app",
+  "docs_url": "https://retentionlab-rho.vercel.app/docs",
+  "status": "verified",
   "model_version": "churnguard-hgb-calibrated-v1",
-  "verified_endpoints": [],
-  "status": "Not deployed: Vercel CLI unavailable; authenticated CLI session could not be checked.",
-  "cli_available": false,
-  "authentication_status": "not checked without CLI"
+  "endpoints_verified": 10,
+  "endpoints_total": 10,
+  "verified_endpoints": [
+    {
+      "endpoint": "GET /",
+      "http_status": 200,
+      "passed": true,
+      "observation": "landing page HTML served"
+    },
+    {
+      "endpoint": "GET /health",
+      "http_status": 200,
+      "passed": true,
+      "observation": "liveness ok"
+    },
+    {
+      "endpoint": "GET /ready",
+      "http_status": 200,
+      "passed": true,
+      "observation": "model churnguard-hgb-calibrated-v1 loaded, checksum verified"
+    },
+    {
+      "endpoint": "GET /model-info",
+      "http_status": 200,
+      "passed": true,
+      "observation": "version churnguard-hgb-calibrated-v1"
+    },
+    {
+      "endpoint": "POST /predict",
+      "http_status": 200,
+      "passed": true,
+      "observation": "probability 0.024078"
+    },
+    {
+      "endpoint": "POST /batch-predict",
+      "http_status": 200,
+      "passed": true,
+      "observation": "2 predictions returned"
+    },
+    {
+      "endpoint": "POST /rank",
+      "http_status": 200,
+      "passed": true,
+      "observation": "2 rows ranked by descending risk, selected_count=1"
+    },
+    {
+      "endpoint": "POST /monitor/drift",
+      "http_status": 200,
+      "passed": true,
+      "observation": "status substantial_apparent_shift"
+    },
+    {
+      "endpoint": "GET /metrics",
+      "http_status": 200,
+      "passed": true,
+      "observation": "6580 bytes of exposition"
+    },
+    {
+      "endpoint": "GET /docs",
+      "http_status": 200,
+      "passed": true,
+      "observation": "OpenAPI docs page served"
+    }
+  ],
+  "failures": [],
+  "verification_timestamp_utc": "2026-09-10T08:52:00Z",
+  "verified_against_commit": "edf28e099bb5ce264b968a5cf01c2f1491de221b",
+  "notes": [
+    "Serverless instances are ephemeral and horizontally scaled: /metrics reflects one instance's in-process counters, not globally aggregated telemetry.",
+    "Response times are not a production latency benchmark; they include cold starts."
+  ]
 }

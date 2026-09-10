@@ -1,0 +1,18 @@
+# Upload only what the inference service needs at runtime.
+# NOTE: models/final_model.joblib is intentionally NOT excluded here even though
+# .gitignore lists models/*.joblib -- the deployed function must load it.
+.git
+.github
+.venv
+venv
+__pycache__
+*.pyc
+.pytest_cache
+.ruff_cache
+data
+tests
+reports/figures
+reports/tables
+docs
+Dockerfile
+.dockerignore

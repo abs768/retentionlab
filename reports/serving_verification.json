@@ -1,7 +1,7 @@
 {
   "python_version": "3.10.20",
   "test_results": {
-    "tests": 72,
+    "tests": 75,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -11,6 +11,10 @@
   "model_version": "churnguard-hgb-calibrated-v1",
   "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
   "endpoints": [
+    {
+      "method": "GET",
+      "path": "/"
+    },
     {
       "method": "GET",
       "path": "/health"
@@ -44,7 +48,7 @@
       "path": "/metrics"
     }
   ],
-  "endpoint_count": 8,
+  "endpoint_count": 9,
   "max_batch_size": 1000,
   "numeric_drift_features": [
     "tenure",

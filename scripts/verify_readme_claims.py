@@ -313,6 +313,61 @@ def check_serving(checker: ClaimChecker) -> None:
         checker.check(f"Benchmark {key}", int(match.group(1)) if match else -1, benchmark[key])
 
 
+
+def check_landing_facts(checker: ClaimChecker) -> None:
+    """The served landing page must restate the canonical analytical artifacts."""
+    facts = json.loads((ROOT / "artifacts" / "landing" / "landing_facts.json").read_text())
+    summary = json.loads((REPORTS / "run_summary.json").read_text())
+    metrics = summary["test_metrics"]
+    top20 = next(r for r in summary["policy"] if abs(r["capacity_fraction"] - 0.20) < 1e-9)
+    values = {item["label"]: item["value"] for item in facts["headline_metrics"]}
+
+    expected = {
+        "Customer Records": f"{summary['n_rows']:,}",
+        "ROC-AUC": f"{metrics['roc_auc']:.3f}",
+        "PR-AUC": f"{metrics['pr_auc']:.3f}",
+        "Observed Churners Captured in Top 20% Risk Cohort":
+            f"{top20['churner_capture_rate'] * 100:.1f}%",
+        "Lift Over Random Targeting": f"{top20['lift_vs_random']:.2f}x",
+    }
+    for label, want in expected.items():
+        checker.check(f"landing page {label}", 1, int(values.get(label) == want))
+
+    completed = subprocess.run(
+        [sys.executable, "-m", "pytest", "--collect-only"],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+    match = re.search(r"(\d+) tests? collected", completed.stdout)
+    collected = int(match.group(1)) if match else -1
+    checker.check("landing page automated test count", int(values["Automated Tests"]), collected)
+    checker.check("landing page Brier score", facts["brier_score"],
+                  round(float(metrics["brier_score"]), 4))
+
+
+def check_deployment(checker: ClaimChecker) -> None:
+    """README deployment claims must match the recorded public verification."""
+    path = REPORTS / "deployment.json"
+    if not path.exists():
+        return
+    deployment = json.loads(path.read_text())
+    readme = (ROOT / "README.md").read_text()
+
+    verified = sum(1 for row in deployment["verified_endpoints"] if row["passed"])
+    checker.check("deployment.json self-consistent verified count",
+                  deployment["endpoints_verified"], verified)
+
+    block = readme.split("<!-- DEPLOYMENT_START -->")[1].split("<!-- DEPLOYMENT_END -->")[0]
+    claimed = re.findall(r"\*\*(\d+)\*\*", block)
+    checker.check("README verified endpoint count", int(claimed[0]), verified)
+    checker.check("README total endpoint count", int(claimed[1]), deployment["endpoints_total"])
+    checker.check("README deployment URL matches evidence", 1,
+                  int(deployment["public_url"] in block))
+    checker.check("README live demo link matches evidence", 1,
+                  int(f"**Live Demo:** {deployment['public_url']}" in readme))
+    checker.check("every recorded endpoint passed", deployment["endpoints_total"], verified)
+
 def main() -> int:
     summary = json.loads((REPORTS / "run_summary.json").read_text())
     validation_report = json.loads((REPORTS / "validation_report.json").read_text())
@@ -329,6 +384,8 @@ def main() -> int:
         checker, pd.read_csv(TABLES / "chi_square_tests.csv"), chi_square_details
     )
     check_test_count(checker)
+    check_landing_facts(checker)
+    check_deployment(checker)
     check_serving(checker)
 
     for _, label, claimed, actual in checker.failures:

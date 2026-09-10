@@ -44,3 +44,4 @@ models/*.joblib
 .env.*
 .vercel/
 work/
+.vercel
