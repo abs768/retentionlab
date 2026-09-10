@@ -11,6 +11,8 @@ evidence; it does not turn predictive lift into causal retention impact.
 > The Python package and model artifact keep their original internal name (`churnguard`).
 > Renaming them would invalidate the frozen, checksum-verified artifact for no public benefit.
 
+**Repository:** https://github.com/abs768/retentionlab
+
 **Live Demo:** https://retentionlab-rho.vercel.app
 **API Docs:** https://retentionlab-rho.vercel.app/docs
 
@@ -463,7 +465,7 @@ synthetic shifts, missingness, fixed bins and metrics labels. The frozen test pr
 are also checked against the saved analytical metrics.
 
 <!-- SERVING_EVIDENCE_START -->
-Automated tests: **87** (all passed, zero skipped).
+Automated tests: **89** (all passed, zero skipped).
 
 Service endpoints: **12** (excluding framework documentation).
 

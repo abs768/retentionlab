@@ -30,6 +30,7 @@ REPORTS = ROOT / "reports"
 TABLES = REPORTS / "tables"
 OUTPUT = ROOT / "artifacts" / "landing" / "landing_facts.json"
 
+REPOSITORY_URL = "https://github.com/abs768/retentionlab"
 PUBLIC_NAME = "RetentionLab"
 PUBLIC_TAGLINE = "End-to-End Customer Retention Analytics Platform"
 HERO_SUMMARY = (
@@ -248,6 +249,7 @@ def build_facts() -> dict:
     return {
         "name": PUBLIC_NAME,
         "tagline": PUBLIC_TAGLINE,
+        "repository_url": REPOSITORY_URL,
         "hero_summary": HERO_SUMMARY,
         "model_version": verification["model_version"],
         "model_sha256": verification["model_sha256"],

@@ -1,6 +1,7 @@
 {
   "name": "RetentionLab",
   "tagline": "End-to-End Customer Retention Analytics Platform",
+  "repository_url": "https://github.com/abs768/retentionlab",
   "hero_summary": "From churn prediction to retention decisions \u2014 a leakage-safe machine learning system combining calibrated risk modeling, constrained targeting, experiment design, model serving, and drift monitoring.",
   "model_version": "churnguard-hgb-calibrated-v1",
   "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
@@ -172,7 +173,7 @@
   "engineering": {
     "features": 19,
     "max_batch": 1000,
-    "tests": 87,
+    "tests": 89,
     "readme_claims": 184,
     "metric_families": 6,
     "endpoint_count": 12,

@@ -22,6 +22,11 @@ dependencies = [
     "prometheus-client>=0.21,<1",
 ]
 
+[project.urls]
+Homepage = "https://github.com/abs768/retentionlab"
+Repository = "https://github.com/abs768/retentionlab"
+"Live demo" = "https://retentionlab-rho.vercel.app"
+
 [project.optional-dependencies]
 dev = [
     "pytest>=8.0,<9",

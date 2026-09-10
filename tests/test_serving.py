@@ -410,3 +410,24 @@ def test_landing_claim_count_matches_verifier_artifact():
         assert claimed == record["total_claims"]
     else:
         assert claimed is None
+
+
+REPOSITORY_URL = "https://github.com/abs768/retentionlab"
+
+
+def test_landing_links_to_the_public_repository(client):
+    """The GitHub entry points must target the real repository, not a placeholder."""
+    facts = _facts()
+    assert facts["repository_url"] == REPOSITORY_URL
+
+    body = client.get("/").text
+    assert body.count(f'href="{REPOSITORY_URL}"') >= 2, "expect nav/hero and footer links"
+    # External links must not leak referrer or expose the opener.
+    for fragment in body.split(f'href="{REPOSITORY_URL}"')[1:]:
+        attrs = fragment[:120]
+        assert 'target="_blank"' in attrs
+        assert "noopener" in attrs and "noreferrer" in attrs
+
+
+def test_project_summary_exposes_the_repository_url(client):
+    assert client.get("/project-summary").json()["repository_url"] == REPOSITORY_URL

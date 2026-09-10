@@ -1,7 +1,7 @@
 {
   "python_version": "3.10.20",
   "test_results": {
-    "tests": 87,
+    "tests": 89,
     "failures": 0,
     "errors": 0,
     "skipped": 0

@@ -105,6 +105,18 @@ FAVICON = (
     "stroke-linecap='round'/></svg>"
 )
 
+GITHUB_MARK = (
+    '<svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor" '
+    'aria-hidden="true"><path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 '
+    '7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-'
+    '.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 '
+    '2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-'
+    '.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27s1.36.09 2 .27c'
+    '1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-'
+    '1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38'
+    'A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/></svg>'
+)
+
 WARN_ICON = (
     '<svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden="true">'
     '<path d="M8 1.5 15 14H1L8 1.5Z" stroke="currentColor" stroke-width="1.4" '
@@ -200,6 +212,7 @@ def _metric_cards(facts: dict) -> str:
 
 def _hero(facts: dict) -> str:
     name = escape(str(facts.get("name", "RetentionLab")))
+    repo = escape(str(facts.get("repository_url", "")))
     return f"""
 <header class="hero" id="overview">
   <div class="wrap">
@@ -211,6 +224,8 @@ def _hero(facts: dict) -> str:
       <a class="btn btn-primary" href="#demo">Try the Model</a>
       <a class="btn" href="#performance">Explore the Analysis</a>
       <a class="btn" href="/docs">API Docs</a>
+      <a class="btn" href="{repo}" target="_blank" rel="noopener noreferrer">
+        {GITHUB_MARK} GitHub</a>
     </div>
     <div class="metrics">{_metric_cards(facts)}</div>
   </div>
@@ -704,6 +719,7 @@ def _api_and_limits(facts: dict) -> str:
 
 
 def _nav(facts: dict) -> str:
+    repo = escape(str(facts.get("repository_url", "")))
     links = "".join(
         f'<a href="#{slug}">{escape(label)}</a>' for slug, label in NAV_SECTIONS
     )
@@ -713,6 +729,8 @@ def _nav(facts: dict) -> str:
   <div class="nav-inner">
     <a class="brand" href="#overview">Retention<span>Lab</span></a>
     <div class="nav-links">{links}</div>
+    <a class="nav-cta nav-icon" href="{repo}" target="_blank" rel="noopener noreferrer"
+       aria-label="View RetentionLab on GitHub" title="View source on GitHub">{GITHUB_MARK}</a>
     <a class="nav-cta" href="/docs">API Docs</a>
   </div>
 </nav>
@@ -720,6 +738,7 @@ def _nav(facts: dict) -> str:
 
 
 def _footer(facts: dict) -> str:
+    repo = escape(str(facts.get("repository_url", "")))
     version = escape(str(facts.get("model_version", "")))
     digest = escape(str(facts.get("model_sha256", ""))[:16])
     return f"""
@@ -729,7 +748,8 @@ def _footer(facts: dict) -> str:
     · artifact <code>{digest}…</code> verified at startup. Observational data with no treatment
     assignment: this service predicts churn risk and prioritizes outreach. It does not claim that
     any intervention reduces churn, and it is not a production deployment.</p>
-    <p class="note" style="margin:0"><a href="/docs">API docs</a> ·
+    <p class="note" style="margin:0"><a href="{repo}" target="_blank"
+    rel="noopener noreferrer">Source on GitHub</a> · <a href="/docs">API docs</a> ·
     <a href="/project-summary">Project summary</a> · <a href="/ready">Readiness</a></p>
   </div>
 </footer>"""
