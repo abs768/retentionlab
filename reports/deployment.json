@@ -60,7 +60,7 @@
       "endpoint": "GET /metrics",
       "http_status": 200,
       "passed": true,
-      "observation": "6581 bytes of exposition"
+      "observation": "6580 bytes of exposition"
     },
     {
       "endpoint": "GET /docs",
@@ -94,8 +94,8 @@
     }
   ],
   "failures": [],
-  "verification_timestamp_utc": "2026-09-10T09:14:50Z",
-  "verified_against_commit": "d6b2a08342c7fcdb1ffdac8fc45d36e567c311d1",
+  "verification_timestamp_utc": "2026-09-10T09:16:59Z",
+  "verified_against_commit": "3af9e8fc10c36853cba5d28c3c17126d9b1fe0ba",
   "notes": [
     "Serverless instances are ephemeral and horizontally scaled: /metrics reflects one instance's in-process counters, not globally aggregated telemetry.",
     "Response times are not a production latency benchmark; they include cold starts."
