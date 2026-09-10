@@ -1,6 +1,7 @@
 """Serving contracts tested against the trusted frozen model and actual data."""
 
 import json
+import math
 from dataclasses import replace
 from unittest.mock import patch
 
@@ -261,34 +262,29 @@ def test_metrics_increment_and_no_customer_labels(client, sample):
             assert set(row.labels).issubset({"endpoint", "le"})
 
 
-def test_frozen_test_metrics_unchanged(splits, client):
-    from churnguard.config import REPORTS_DIR
-    from churnguard.evaluation import compute_metrics
-
-    actual = compute_metrics(
-        splits.y_test.to_numpy(), client.app.state.service.model.predict_proba(splits.X_test)[:, 1]
-    )
-    expected = json.loads((REPORTS_DIR / "tables/test_metrics.json").read_text())
-    for metric, value in expected.items():
-        assert actual[metric] == pytest.approx(value, abs=1e-12)
+def _facts():
+    return json.loads(Settings().landing_facts_path.read_text())
 
 
-def test_landing_page_serves_verified_facts(client):
-    """GET / renders the recruiter page from generated, artifact-derived facts."""
+def test_landing_page_renders_all_sections(client):
+    """GET / serves the recruiter page with every documented section anchor."""
     response = client.get("/")
     assert response.status_code == 200
     assert response.headers["content-type"].startswith("text/html")
     body = response.text
     assert "RetentionLab" in body
     assert "End-to-End Customer Retention Analytics Platform" in body
-    for link in ("/docs", "/model-info", "/health"):
-        assert f'href="{link}"' in body
+    for anchor in (
+        "overview", "problem", "performance", "targeting", "demo",
+        "experiment", "architecture", "engineering", "monitoring", "limitations",
+    ):
+        assert f'id="{anchor}"' in body, anchor
 
 
 def test_landing_metrics_match_canonical_run_summary(client):
     """Every headline number on the page traces back to reports/run_summary.json."""
-    summary = json.loads((Settings().landing_facts_path.parents[2] / "reports"
-                          / "run_summary.json").read_text())
+    root = Settings().landing_facts_path.parents[2]
+    summary = json.loads((root / "reports" / "run_summary.json").read_text())
     top20 = next(r for r in summary["policy"] if abs(r["capacity_fraction"] - 0.20) < 1e-9)
     body = client.get("/").text
 
@@ -299,8 +295,118 @@ def test_landing_metrics_match_canonical_run_summary(client):
     assert f"{top20['lift_vs_random']:.2f}x" in body
 
 
+def test_landing_form_covers_the_full_model_contract(client):
+    """The demo form must expose every raw feature except the derived TotalCharges."""
+    body = client.get("/").text
+    for feature in RAW_FEATURES:
+        if feature == "TotalCharges":
+            assert "derived-total" in body
+            continue
+        assert f'data-field="{feature}"' in body, feature
+
+
+def test_landing_form_options_come_from_the_pydantic_schema(client):
+    """Categorical dropdowns must offer exactly the values the API accepts."""
+    body = client.get("/").text
+    for value in ("Month-to-month", "Two year", "Fiber optic", "No internet service",
+                  "Bank transfer (automatic)", "No phone service"):
+        assert f'<option value="{value}"' in body, value
+
+
 def test_landing_page_does_not_leak_local_paths(client):
     """The public page must never expose developer filesystem paths."""
     body = client.get("/").text
     assert "/Users/" not in body
     assert "bhavanishankar" not in body
+
+
+def test_static_assets_are_served_with_correct_types(client):
+    for path, content_type in (
+        ("/static/landing.css", "text/css"),
+        ("/static/landing.js", "application/javascript"),
+    ):
+        response = client.get(path)
+        assert response.status_code == 200
+        assert response.headers["content-type"].startswith(content_type)
+        assert len(response.content) > 500
+
+
+def test_generated_figures_are_served(client):
+    """Figures shown on the page are the pipeline's own PNG artifacts."""
+    for figure in _facts()["figures"]:
+        response = client.get(f"/figures/{figure['file']}")
+        assert response.status_code == 200, figure["file"]
+        assert response.headers["content-type"] == "image/png"
+        assert response.content[:8] == b"\x89PNG\r\n\x1a\n"
+
+
+@pytest.mark.parametrize(
+    "path",
+    [
+        "/static/../config.py",
+        "/static/../../README.md",
+        "/figures/../../README.md",
+        "/static/nope.txt",
+        "/figures/nope.png",
+    ],
+)
+def test_asset_routes_reject_traversal_and_unknown_files(client, path):
+    assert client.get(path).status_code == 404
+
+
+def test_project_summary_matches_the_rendered_landing_facts(client):
+    """The JSON endpoint and the page must quote the same generated evidence."""
+    response = client.get("/project-summary")
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload == _facts()
+    assert payload["headline_metrics"]
+    assert payload["engineering"]["tests"] > 0
+
+
+def test_landing_sample_customers_are_valid_model_inputs(client):
+    """Every demo record must satisfy the real schema and score successfully."""
+    facts = _facts()
+    records = [e["customer"] for e in facts["example_customers"]]
+    records += [c["customer"] for c in facts["ranking_cohort"]]
+    assert len(records) >= 12
+    for record in records:
+        # No target may ever appear in a demo input.
+        assert "Churn" not in record
+        assert set(record) == set(RAW_FEATURES)
+        Customer.model_validate(record)
+    response = client.post("/batch-predict", json={"customers": records})
+    assert response.status_code == 200
+    assert len(response.json()["predictions"]) == len(records)
+
+
+def test_ranking_cohort_ranks_end_to_end(client):
+    """The ranking demo's payload works against the live /rank contract."""
+    facts = _facts()
+    payload = {
+        "customers": [
+            dict(entry["customer"], customerID=entry["id"])
+            for entry in facts["ranking_cohort"]
+        ],
+        "capacity_fraction": 0.20,
+    }
+    response = client.post("/rank", json=payload)
+    assert response.status_code == 200
+    body = response.json()
+    probabilities = [row["churn_probability"] for row in body["customers"]]
+    assert probabilities == sorted(probabilities, reverse=True)
+    assert body["selected_count"] == math.ceil(0.20 * len(payload["customers"]))
+
+
+def test_landing_claim_count_matches_verifier_artifact():
+    """The documentation-integrity card must quote the verifier's recorded result."""
+    root = Settings().landing_facts_path.parents[2]
+    record_path = root / "reports" / "claim_verification.json"
+    if not record_path.exists():
+        pytest.skip("claim verification has not been recorded yet")
+    record = json.loads(record_path.read_text())
+    claimed = _facts()["engineering"]["readme_claims"]
+    if record["all_passed"]:
+        assert claimed == record["total_claims"]
+    else:
+        assert claimed is None

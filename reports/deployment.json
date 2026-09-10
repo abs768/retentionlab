@@ -5,8 +5,8 @@
   "docs_url": "https://retentionlab-rho.vercel.app/docs",
   "status": "verified",
   "model_version": "churnguard-hgb-calibrated-v1",
-  "endpoints_verified": 10,
-  "endpoints_total": 10,
+  "endpoints_verified": 14,
+  "endpoints_total": 14,
   "verified_endpoints": [
     {
       "endpoint": "GET /",
@@ -60,18 +60,42 @@
       "endpoint": "GET /metrics",
       "http_status": 200,
       "passed": true,
-      "observation": "6580 bytes of exposition"
+      "observation": "6581 bytes of exposition"
     },
     {
       "endpoint": "GET /docs",
       "http_status": 200,
       "passed": true,
       "observation": "OpenAPI docs page served"
+    },
+    {
+      "endpoint": "GET /project-summary",
+      "http_status": 200,
+      "passed": true,
+      "observation": "5 headline metrics served as JSON"
+    },
+    {
+      "endpoint": "GET /static/landing.css",
+      "http_status": 200,
+      "passed": true,
+      "observation": "text/css, 19944 bytes"
+    },
+    {
+      "endpoint": "GET /static/landing.js",
+      "http_status": 200,
+      "passed": true,
+      "observation": "application/javascript, 9190 bytes"
+    },
+    {
+      "endpoint": "GET /figures/roc_curve.png",
+      "http_status": 200,
+      "passed": true,
+      "observation": "generated PNG, 45120 bytes"
     }
   ],
   "failures": [],
-  "verification_timestamp_utc": "2026-09-10T08:52:00Z",
-  "verified_against_commit": "edf28e099bb5ce264b968a5cf01c2f1491de221b",
+  "verification_timestamp_utc": "2026-09-10T09:14:50Z",
+  "verified_against_commit": "d6b2a08342c7fcdb1ffdac8fc45d36e567c311d1",
   "notes": [
     "Serverless instances are ephemeral and horizontally scaled: /metrics reflects one instance's in-process counters, not globally aggregated telemetry.",
     "Response times are not a production latency benchmark; they include cold starts."

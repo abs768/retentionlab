@@ -103,6 +103,10 @@ def build_checks(base: str) -> list[dict[str, Any]]:
         },
         {"name": "GET /metrics", "method": "GET", "path": "/metrics"},
         {"name": "GET /docs", "method": "GET", "path": "/docs"},
+        {"name": "GET /project-summary", "method": "GET", "path": "/project-summary"},
+        {"name": "GET /static/landing.css", "method": "GET", "path": "/static/landing.css"},
+        {"name": "GET /static/landing.js", "method": "GET", "path": "/static/landing.js"},
+        {"name": "GET /figures/roc_curve.png", "method": "GET", "path": "/figures/roc_curve.png"},
     ]
 
 
@@ -142,6 +146,17 @@ def evaluate(name: str, result: dict[str, Any]) -> tuple[bool, str]:
         return result["bytes"] > 0, f"{result['bytes']} bytes of exposition"
     if name == "GET /docs":
         return result["bytes"] > 500, "OpenAPI docs page served"
+    if name == "GET /project-summary":
+        ok = bool(body) and bool(body.get("headline_metrics"))
+        count = len((body or {}).get("headline_metrics", []))
+        return ok, f"{count} headline metrics served as JSON"
+    if name.startswith("GET /static/"):
+        expected = "text/css" if name.endswith(".css") else "application/javascript"
+        ok = result["content_type"] == expected and result["bytes"] > 500
+        return ok, f"{result['content_type']}, {result['bytes']} bytes"
+    if name.startswith("GET /figures/"):
+        ok = result["content_type"] == "image/png" and result["bytes"] > 1000
+        return ok, f"generated PNG, {result['bytes']} bytes"
     return True, "ok"
 
 

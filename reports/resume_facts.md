@@ -47,12 +47,12 @@ ASSOCIATION TESTS (observational, pre-specified, not causal):
 
 ## ML ENGINEERING
 
-- 9 service endpoints; maximum vectorized batch: 1000 customers
+- 12 service endpoints; maximum vectorized batch: 1000 customers
 - checksum, feature-contract and startup smoke verification: passed; model churnguard-hgb-calibrated-v1
 - PSI on tenure, MonthlyCharges, TotalCharges; categorical total variation on Contract, InternetService, PaymentMethod
 - training-only drift reference: 4,929 rows
 - 6 Prometheus metric families; instance-local counters
-- executed automated tests: 75; failures 0, errors 0, skipped 0
+- executed automated tests: 87; failures 0, errors 0, skipped 0
 - CI: Configured for Python 3.10/3.12 and Docker; remote run not observed
 - local batch 1: direct p50/p95 14.06/14.39 ms; FastAPI TestClient 15.66/16.32 ms (not network latency)
 - local batch 10: direct p50/p95 14.44/16.19 ms; FastAPI TestClient 16.11/16.68 ms (not network latency)
@@ -65,6 +65,6 @@ ASSOCIATION TESTS (observational, pre-specified, not causal):
 ## DEPLOYMENT
 
 - deployed on Vercel (project retentionlab): https://retentionlab-rho.vercel.app
-- 10 of 10 public HTTPS endpoints exercised and verified on 2026-09-10T08:52:00Z
+- 14 of 14 public HTTPS endpoints exercised and verified on 2026-09-10T09:14:50Z
 - serving model churnguard-hgb-calibrated-v1 with startup checksum verification, from the same artifact bytes verified locally
 - public response times include cold starts and are not a latency benchmark; /metrics counters are instance-local, not globally aggregated

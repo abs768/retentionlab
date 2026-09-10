@@ -315,35 +315,91 @@ def check_serving(checker: ClaimChecker) -> None:
 
 
 def check_landing_facts(checker: ClaimChecker) -> None:
-    """The served landing page must restate the canonical analytical artifacts."""
+    """Every number the public landing page renders must match a canonical artifact.
+
+    The page reads ``artifacts/landing/landing_facts.json`` and ``GET /project-summary``
+    serves that same file, so validating the payload validates both surfaces.
+    """
     facts = json.loads((ROOT / "artifacts" / "landing" / "landing_facts.json").read_text())
     summary = json.loads((REPORTS / "run_summary.json").read_text())
+    verification = json.loads((REPORTS / "serving_verification.json").read_text())
+    benchmark = json.loads((REPORTS / "serving_benchmark.json").read_text())
     metrics = summary["test_metrics"]
     top20 = next(r for r in summary["policy"] if abs(r["capacity_fraction"] - 0.20) < 1e-9)
-    values = {item["label"]: item["value"] for item in facts["headline_metrics"]}
 
-    expected = {
+    headline = {item["label"]: item["value"] for item in facts["headline_metrics"]}
+    expected_headline = {
         "Customer Records": f"{summary['n_rows']:,}",
         "ROC-AUC": f"{metrics['roc_auc']:.3f}",
         "PR-AUC": f"{metrics['pr_auc']:.3f}",
-        "Observed Churners Captured in Top 20% Risk Cohort":
-            f"{top20['churner_capture_rate'] * 100:.1f}%",
-        "Lift Over Random Targeting": f"{top20['lift_vs_random']:.2f}x",
+        "Churners Captured": f"{top20['churner_capture_rate'] * 100:.1f}%",
+        "Lift vs Random Targeting": f"{top20['lift_vs_random']:.2f}x",
     }
-    for label, want in expected.items():
-        checker.check(f"landing page {label}", 1, int(values.get(label) == want))
+    checker.check("landing headline metric count", len(expected_headline), len(headline))
+    for label, want in expected_headline.items():
+        checker.check(f"landing headline {label}", 1, int(headline.get(label) == want))
+
+    performance = facts["performance"]
+    for key in ("roc_auc", "pr_auc", "brier_score", "log_loss"):
+        checker.check(f"landing performance {key}", performance[key], round(metrics[key], 4))
+    checker.check("landing test-split size", performance["test_rows"], metrics["n_observations"])
+
+    checker.check("landing policy row count", len(facts["policy"]), len(summary["policy"]))
+    for row in facts["policy"]:
+        source = next(
+            r for r in summary["policy"]
+            if int(round(r["capacity_fraction"] * 100)) == row["capacity_pct"]
+        )
+        checker.check(f"landing policy {row['capacity_pct']}% capture",
+                      row["capture_pct"], round(source["churner_capture_rate"] * 100, 1))
+        checker.check(f"landing policy {row['capacity_pct']}% lift",
+                      row["lift"], round(source["lift_vs_random"], 2))
+        checker.check(f"landing policy {row['capacity_pct']}% contacted",
+                      row["contacted"], source["n_contacted"])
+
+    experiment = pd.read_csv(TABLES / "experiment_design.csv")
+    design = facts["experiment"]
+    sizing = experiment[
+        (experiment["analysis"] == "required_sample_size")
+        & (experiment["assumed_absolute_reduction"] == design["reduction_pp"] / 100)
+        & (experiment["power"] == design["power_pct"] / 100)
+    ].iloc[0]
+    checker.check("landing experiment per-arm size", design["per_arm"], int(sizing["n_per_arm"]))
+    checker.check("landing experiment total size", design["total_n"], int(sizing["total_n"]))
+    checker.check("landing experiment baseline", design["baseline_pct"],
+                  round(float(sizing["baseline_churn_rate"]) * 100, 1))
+
+    engineering = facts["engineering"]
+    checker.check("landing feature count", engineering["features"], summary["n_model_features"])
+    checker.check("landing max batch", engineering["max_batch"], verification["max_batch_size"])
+    checker.check("landing metric families", engineering["metric_families"],
+                  len(verification["metrics"]))
+    checker.check("landing endpoint count", engineering["endpoint_count"],
+                  verification["endpoint_count"])
+    checker.check("landing reference rows", engineering["reference_rows"],
+                  verification["reference_row_count"])
+
+    checker.check("landing benchmark row count",
+                  len(facts["benchmark"]["rows"]), len(benchmark["results"]))
+    for row, source in zip(
+        facts["benchmark"]["rows"], benchmark["results"], strict=True
+    ):
+        checker.check(f"landing benchmark batch {row['batch_size']} p95",
+                      row["http_p95"], round(source["fastapi_testclient"]["p95_ms"], 2))
 
     completed = subprocess.run(
         [sys.executable, "-m", "pytest", "--collect-only"],
-        cwd=ROOT,
-        capture_output=True,
-        text=True,
+        cwd=ROOT, capture_output=True, text=True,
     )
     match = re.search(r"(\d+) tests? collected", completed.stdout)
-    collected = int(match.group(1)) if match else -1
-    checker.check("landing page automated test count", int(values["Automated Tests"]), collected)
-    checker.check("landing page Brier score", facts["brier_score"],
-                  round(float(metrics["brier_score"]), 4))
+    checker.check("landing automated test count", engineering["tests"],
+                  int(match.group(1)) if match else -1)
+
+    # Demo records must never carry a churn label.
+    demo_records = [e["customer"] for e in facts["example_customers"]]
+    demo_records += [c["customer"] for c in facts["ranking_cohort"]]
+    checker.check("landing demo records carry no target", 0,
+                  sum(1 for record in demo_records if "Churn" in record))
 
 
 def check_deployment(checker: ClaimChecker) -> None:
@@ -393,6 +449,22 @@ def main() -> int:
 
     total = len(checker.results)
     passed = total - len(checker.failures)
+
+    # Record the outcome so other generators quote this number instead of
+    # re-deriving it (or scraping this script's stdout).
+    (REPORTS / "claim_verification.json").write_text(
+        json.dumps(
+            {
+                "total_claims": total,
+                "claims_passed": passed,
+                "all_passed": not checker.failures,
+                "failures": [row[1] for row in checker.failures],
+            },
+            indent=2,
+        )
+        + "\n"
+    )
+
     print(f"\n{passed}/{total} README numeric claims verified against artifacts.")
     return 1 if checker.failures else 0
 

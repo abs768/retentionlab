@@ -18,3 +18,5 @@ class Settings:
     metadata_path: Path = ROOT / "artifacts/model/model_metadata.json"
     reference_path: Path = ROOT / "artifacts/reference/reference_profile.json"
     landing_facts_path: Path = ROOT / "artifacts/landing/landing_facts.json"
+    static_dir: Path = ROOT / "app/static"
+    figures_dir: Path = ROOT / "reports/figures"

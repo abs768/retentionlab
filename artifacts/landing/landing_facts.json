@@ -1,8 +1,15 @@
 {
   "name": "RetentionLab",
   "tagline": "End-to-End Customer Retention Analytics Platform",
+  "hero_summary": "From churn prediction to retention decisions \u2014 a leakage-safe machine learning system combining calibrated risk modeling, constrained targeting, experiment design, model serving, and drift monitoring.",
   "model_version": "churnguard-hgb-calibrated-v1",
-  "source": "reports/run_summary.json",
+  "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
+  "generated_from": {
+    "analytics": "reports/run_summary.json",
+    "serving": "reports/serving_verification.json",
+    "benchmark": "reports/serving_benchmark.json",
+    "tables": "reports/tables/"
+  },
   "headline_metrics": [
     {
       "value": "7,043",
@@ -21,31 +28,798 @@
     },
     {
       "value": "51.1%",
-      "label": "Observed Churners Captured in Top 20% Risk Cohort",
-      "detail": "143 of 280 test-set churners"
+      "label": "Churners Captured",
+      "detail": "within the highest-risk 20%"
     },
     {
       "value": "2.55x",
-      "label": "Lift Over Random Targeting",
+      "label": "Lift vs Random Targeting",
       "detail": "Retrospective ranking, not a causal effect"
-    },
-    {
-      "value": "75",
-      "label": "Automated Tests",
-      "detail": "Analytics, serving, and monitoring"
     }
   ],
-  "capabilities": [
-    "Leakage-Safe Modeling",
-    "Gradient Boosting",
-    "Probability Calibration",
-    "Capacity-Constrained Targeting",
-    "Statistical Experiment Design",
-    "Vectorized Batch Inference",
-    "Model Artifact Verification",
-    "Drift Monitoring",
-    "Prometheus Observability"
+  "decision_flow": [
+    {
+      "step": "7,043 customers",
+      "detail": "Observational records, no treatment assignment"
+    },
+    {
+      "step": "Predict churn probability",
+      "detail": "Gradient boosting over 19 validated features"
+    },
+    {
+      "step": "Calibrate risk",
+      "detail": "Probabilities usable as numbers, not just ranks"
+    },
+    {
+      "step": "Apply outreach capacity",
+      "detail": "The retention team cannot contact everyone"
+    },
+    {
+      "step": "Rank customers",
+      "detail": "Highest predicted risk first"
+    },
+    {
+      "step": "Target the top cohort",
+      "detail": "51.1% of churners inside the top 20%"
+    },
+    {
+      "step": "Test with an RCT",
+      "detail": "The only way to measure a causal effect"
+    }
   ],
-  "brier_score": 0.1324,
-  "experiment_note": "A 3-point absolute churn reduction would need about 3,915 customers per arm at 80% power."
+  "dataset": {
+    "rows": 7043,
+    "features": 19,
+    "prevalence_pct": 26.5,
+    "train": 4929,
+    "validation": 1057,
+    "test": 1057,
+    "seed": 42,
+    "coercion_warnings": [
+      "TotalCharges: 11 value(s) could not be parsed as numeric and were coerced to NaN (imputed inside the training pipeline)."
+    ]
+  },
+  "performance": {
+    "roc_auc": 0.8549,
+    "pr_auc": 0.6702,
+    "brier_score": 0.1324,
+    "log_loss": 0.4058,
+    "precision": 0.671,
+    "recall": 0.504,
+    "f1": 0.576,
+    "prevalence_pct": 26.5,
+    "test_rows": 1057
+  },
+  "model_comparison": [
+    {
+      "model": "Logistic Regression",
+      "pr_auc": 0.628,
+      "roc_auc": 0.83,
+      "brier_score": 0.1408,
+      "selected": false
+    },
+    {
+      "model": "Hist Gradient Boosting",
+      "pr_auc": 0.643,
+      "roc_auc": 0.833,
+      "brier_score": 0.1392,
+      "selected": true
+    }
+  ],
+  "calibration": {
+    "choice": "sigmoid",
+    "variants": [
+      {
+        "variant": "uncalibrated",
+        "brier_score": 0.13919,
+        "pr_auc": 0.643,
+        "selected": false
+      },
+      {
+        "variant": "sigmoid",
+        "brier_score": 0.13809,
+        "pr_auc": 0.639,
+        "selected": true
+      },
+      {
+        "variant": "isotonic",
+        "brier_score": 0.13819,
+        "pr_auc": 0.641,
+        "selected": false
+      }
+    ]
+  },
+  "policy": [
+    {
+      "capacity_pct": 10,
+      "contacted": 106,
+      "captured": 80,
+      "total_churners": 280,
+      "capture_pct": 28.6,
+      "precision_pct": 75.5,
+      "lift": 2.85,
+      "highlight": false
+    },
+    {
+      "capacity_pct": 20,
+      "contacted": 212,
+      "captured": 143,
+      "total_churners": 280,
+      "capture_pct": 51.1,
+      "precision_pct": 67.5,
+      "lift": 2.55,
+      "highlight": true
+    },
+    {
+      "capacity_pct": 30,
+      "contacted": 318,
+      "captured": 185,
+      "total_churners": 280,
+      "capture_pct": 66.1,
+      "precision_pct": 58.2,
+      "lift": 2.2,
+      "highlight": false
+    }
+  ],
+  "experiment": {
+    "baseline_pct": 67.5,
+    "reduction_pp": 3,
+    "power_pct": 80,
+    "alpha": 0.05,
+    "per_arm": 3915,
+    "total_n": 7830
+  },
+  "engineering": {
+    "features": 19,
+    "max_batch": 1000,
+    "tests": 87,
+    "readme_claims": 184,
+    "metric_families": 6,
+    "endpoint_count": 12,
+    "reference_rows": 4929,
+    "python_version": "3.10.20",
+    "sklearn_version": "1.6.1"
+  },
+  "drift": {
+    "numeric": [
+      "tenure",
+      "MonthlyCharges",
+      "TotalCharges"
+    ],
+    "categorical": [
+      "Contract",
+      "InternetService",
+      "PaymentMethod"
+    ],
+    "psi_bands": [
+      {
+        "range": "< 0.10",
+        "meaning": "Little apparent shift",
+        "tone": "success"
+      },
+      {
+        "range": "0.10 \u2013 0.25",
+        "meaning": "Investigate",
+        "tone": "warning"
+      },
+      {
+        "range": "\u2265 0.25",
+        "meaning": "Substantial apparent shift",
+        "tone": "danger"
+      }
+    ]
+  },
+  "benchmark": {
+    "method": "Local direct inference and FastAPI TestClient /batch-predict",
+    "iterations": 50,
+    "platform": "Darwin 25.5.0 arm64",
+    "rows": [
+      {
+        "batch_size": 1,
+        "direct_p50": 14.06,
+        "direct_p95": 14.39,
+        "http_p50": 15.66,
+        "http_p95": 16.32
+      },
+      {
+        "batch_size": 10,
+        "direct_p50": 14.44,
+        "direct_p95": 16.19,
+        "http_p50": 16.11,
+        "http_p95": 16.68
+      },
+      {
+        "batch_size": 100,
+        "direct_p50": 16.58,
+        "direct_p95": 17.17,
+        "http_p50": 19.55,
+        "http_p95": 20.89
+      },
+      {
+        "batch_size": 500,
+        "direct_p50": 27.27,
+        "direct_p95": 29.91,
+        "http_p50": 34.6,
+        "http_p95": 36.15
+      }
+    ]
+  },
+  "pipeline_stages": [
+    {
+      "stage": "IBM Telco Sample",
+      "detail": "7,043 labelled customer records"
+    },
+    {
+      "stage": "Schema Validation",
+      "detail": "Columns, duplicates, target values, numeric parsing"
+    },
+    {
+      "stage": "Leakage-Safe Preprocessing",
+      "detail": "Transformers fitted on the training split only"
+    },
+    {
+      "stage": "Model Comparison",
+      "detail": "Interpretable baseline vs nonlinear challenger"
+    },
+    {
+      "stage": "HistGradientBoosting",
+      "detail": "Selected on validation PR-AUC"
+    },
+    {
+      "stage": "Probability Calibration",
+      "detail": "Cross-validated, chosen on validation Brier"
+    },
+    {
+      "stage": "Untouched Test Evaluation",
+      "detail": "Held-out split scored exactly once"
+    },
+    {
+      "stage": "Retention Ranking",
+      "detail": "Capacity-constrained prioritization"
+    },
+    {
+      "stage": "Experiment Design",
+      "detail": "Prospective power analysis"
+    }
+  ],
+  "serving_stages": [
+    {
+      "stage": "final_model.joblib",
+      "detail": "Frozen serialized pipeline"
+    },
+    {
+      "stage": "SHA-256 Verification",
+      "detail": "Checked before the model is served"
+    },
+    {
+      "stage": "FastAPI Service",
+      "detail": "Typed request contract, safe error surfaces"
+    },
+    {
+      "stage": "Prometheus Metrics",
+      "detail": "Six instrumented metric families"
+    },
+    {
+      "stage": "Vercel Deployment",
+      "detail": "Stateless Python serverless function"
+    }
+  ],
+  "endpoints": [
+    {
+      "method": "GET",
+      "path": "/"
+    },
+    {
+      "method": "GET",
+      "path": "/static/{filename}"
+    },
+    {
+      "method": "GET",
+      "path": "/figures/{filename}"
+    },
+    {
+      "method": "GET",
+      "path": "/project-summary"
+    },
+    {
+      "method": "GET",
+      "path": "/health"
+    },
+    {
+      "method": "GET",
+      "path": "/ready"
+    },
+    {
+      "method": "GET",
+      "path": "/model-info"
+    },
+    {
+      "method": "POST",
+      "path": "/predict"
+    },
+    {
+      "method": "POST",
+      "path": "/batch-predict"
+    },
+    {
+      "method": "POST",
+      "path": "/rank"
+    },
+    {
+      "method": "POST",
+      "path": "/monitor/drift"
+    },
+    {
+      "method": "GET",
+      "path": "/metrics"
+    }
+  ],
+  "metric_families": [
+    "churnguard_inference_requests_total",
+    "churnguard_inference_errors_total",
+    "churnguard_predictions_total",
+    "churnguard_inference_latency_seconds",
+    "churnguard_batch_size",
+    "churnguard_drift_checks_total"
+  ],
+  "tech_stack": [
+    {
+      "name": "Python",
+      "role": "Language"
+    },
+    {
+      "name": "scikit-learn",
+      "role": "Modeling & calibration"
+    },
+    {
+      "name": "pandas",
+      "role": "Data handling"
+    },
+    {
+      "name": "NumPy",
+      "role": "Vectorized inference"
+    },
+    {
+      "name": "statsmodels",
+      "role": "Power analysis"
+    },
+    {
+      "name": "FastAPI",
+      "role": "Inference service"
+    },
+    {
+      "name": "Pydantic",
+      "role": "Schema validation"
+    },
+    {
+      "name": "pytest",
+      "role": "Automated tests"
+    },
+    {
+      "name": "Ruff",
+      "role": "Static analysis"
+    },
+    {
+      "name": "Prometheus",
+      "role": "Instrumentation"
+    },
+    {
+      "name": "Docker",
+      "role": "Container definition"
+    },
+    {
+      "name": "GitHub Actions",
+      "role": "CI"
+    },
+    {
+      "name": "Vercel",
+      "role": "Public deployment"
+    }
+  ],
+  "risk_bands": [
+    {
+      "label": "Lower",
+      "min": 0.0,
+      "max": 0.3,
+      "tone": "success"
+    },
+    {
+      "label": "Elevated",
+      "min": 0.3,
+      "max": 0.6,
+      "tone": "warning"
+    },
+    {
+      "label": "High",
+      "min": 0.6,
+      "max": 1.01,
+      "tone": "danger"
+    }
+  ],
+  "example_customers": [
+    {
+      "name": "New fiber subscriber, month-to-month",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 2,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "Yes",
+        "StreamingMovies": "Yes",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 94.4,
+        "TotalCharges": 188.8
+      }
+    },
+    {
+      "name": "Long-tenure two-year contract",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "Yes",
+        "tenure": 64,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "Yes",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "Yes",
+        "TechSupport": "Yes",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Two year",
+        "PaperlessBilling": "No",
+        "PaymentMethod": "Bank transfer (automatic)",
+        "MonthlyCharges": 65.15,
+        "TotalCharges": 4169.6
+      }
+    }
+  ],
+  "ranking_cohort": [
+    {
+      "id": "C-1042",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 1,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "Yes",
+        "StreamingMovies": "Yes",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 89.9,
+        "TotalCharges": 89.9
+      }
+    },
+    {
+      "id": "C-1077",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "Yes",
+        "tenure": 70,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "Yes",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "Yes",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Two year",
+        "PaperlessBilling": "No",
+        "PaymentMethod": "Credit card (automatic)",
+        "MonthlyCharges": 61.0,
+        "TotalCharges": 4270.0
+      }
+    },
+    {
+      "id": "C-1108",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 4,
+        "PhoneService": "Yes",
+        "MultipleLines": "Yes",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "Yes",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 99.35,
+        "TotalCharges": 397.4
+      }
+    },
+    {
+      "id": "C-1153",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 33,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "One year",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Mailed check",
+        "MonthlyCharges": 58.7,
+        "TotalCharges": 1937.1
+      }
+    },
+    {
+      "id": "C-1190",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 1,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 2,
+        "PhoneService": "Yes",
+        "MultipleLines": "Yes",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "Yes",
+        "StreamingMovies": "Yes",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 104.8,
+        "TotalCharges": 209.6
+      }
+    },
+    {
+      "id": "C-1234",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 48,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "No",
+        "OnlineSecurity": "No internet service",
+        "OnlineBackup": "No internet service",
+        "DeviceProtection": "No internet service",
+        "TechSupport": "No internet service",
+        "StreamingTV": "No internet service",
+        "StreamingMovies": "No internet service",
+        "Contract": "Two year",
+        "PaperlessBilling": "No",
+        "PaymentMethod": "Bank transfer (automatic)",
+        "MonthlyCharges": 20.15,
+        "TotalCharges": 967.2
+      }
+    },
+    {
+      "id": "C-1281",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "No",
+        "tenure": 9,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 84.5,
+        "TotalCharges": 760.5
+      }
+    },
+    {
+      "id": "C-1319",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "No",
+        "tenure": 58,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "Yes",
+        "OnlineBackup": "Yes",
+        "DeviceProtection": "Yes",
+        "TechSupport": "Yes",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Two year",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Bank transfer (automatic)",
+        "MonthlyCharges": 70.3,
+        "TotalCharges": 4077.4
+      }
+    },
+    {
+      "id": "C-1355",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 6,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "Yes",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 95.6,
+        "TotalCharges": 573.6
+      }
+    },
+    {
+      "id": "C-1402",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 25,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "Yes",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "One year",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Credit card (automatic)",
+        "MonthlyCharges": 54.25,
+        "TotalCharges": 1356.25
+      }
+    },
+    {
+      "id": "C-1448",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "No",
+        "Dependents": "No",
+        "tenure": 3,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "Fiber optic",
+        "OnlineSecurity": "No",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "Month-to-month",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Electronic check",
+        "MonthlyCharges": 79.85,
+        "TotalCharges": 239.55
+      }
+    },
+    {
+      "id": "C-1495",
+      "customer": {
+        "gender": "Female",
+        "SeniorCitizen": 0,
+        "Partner": "Yes",
+        "Dependents": "Yes",
+        "tenure": 41,
+        "PhoneService": "Yes",
+        "MultipleLines": "No",
+        "InternetService": "DSL",
+        "OnlineSecurity": "Yes",
+        "OnlineBackup": "No",
+        "DeviceProtection": "No",
+        "TechSupport": "No",
+        "StreamingTV": "No",
+        "StreamingMovies": "No",
+        "Contract": "One year",
+        "PaperlessBilling": "Yes",
+        "PaymentMethod": "Mailed check",
+        "MonthlyCharges": 63.4,
+        "TotalCharges": 2599.4
+      }
+    }
+  ],
+  "figures": [
+    {
+      "file": "roc_curve.png",
+      "title": "ROC curve",
+      "caption": "Held-out test split with the random-classifier diagonal.",
+      "width": 780,
+      "height": 585
+    },
+    {
+      "file": "precision_recall_curve.png",
+      "title": "Precision-recall curve",
+      "caption": "Prevalence baseline shown for reference.",
+      "width": 780,
+      "height": 585
+    },
+    {
+      "file": "calibration_curve.png",
+      "title": "Calibration curve",
+      "caption": "Calibrated against uncalibrated probabilities.",
+      "width": 780,
+      "height": 585
+    },
+    {
+      "file": "cumulative_gains.png",
+      "title": "Cumulative gains",
+      "caption": "Churner capture as outreach capacity grows.",
+      "width": 780,
+      "height": 585
+    },
+    {
+      "file": "confusion_matrix.png",
+      "title": "Confusion matrix",
+      "caption": "At the 0.5 decision threshold.",
+      "width": 624,
+      "height": 546
+    }
+  ],
+  "limitations": [
+    "IBM's fictional Telco sample dataset, not real customer records.",
+    "Observational data with no treatment assignment of any kind.",
+    "Predictive ranking does not establish a causal retention effect.",
+    "The randomized experiment is designed and sized, not conducted.",
+    "Latency figures come from a local benchmark, not production network traffic.",
+    "This is a portfolio deployment: no real traffic, no availability guarantee.",
+    "Prometheus counters are per-instance on serverless and are not globally durable."
+  ]
 }

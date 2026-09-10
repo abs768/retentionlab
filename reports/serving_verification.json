@@ -1,7 +1,7 @@
 {
   "python_version": "3.10.20",
   "test_results": {
-    "tests": 75,
+    "tests": 87,
     "failures": 0,
     "errors": 0,
     "skipped": 0
@@ -14,6 +14,18 @@
     {
       "method": "GET",
       "path": "/"
+    },
+    {
+      "method": "GET",
+      "path": "/static/{filename}"
+    },
+    {
+      "method": "GET",
+      "path": "/figures/{filename}"
+    },
+    {
+      "method": "GET",
+      "path": "/project-summary"
     },
     {
       "method": "GET",
@@ -48,7 +60,7 @@
       "path": "/metrics"
     }
   ],
-  "endpoint_count": 9,
+  "endpoint_count": 12,
   "max_batch_size": 1000,
   "numeric_drift_features": [
     "tenure",
