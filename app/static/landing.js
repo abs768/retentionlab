@@ -14,6 +14,20 @@
 
   function $(id) { return document.getElementById(id); }
 
+  // Phone menu: close after choosing a section, or on Escape / outside tap.
+  var menu = document.querySelector(".nav-menu");
+  if (menu) {
+    menu.addEventListener("click", function (event) {
+      if (event.target.closest("a")) { menu.open = false; }
+    });
+    document.addEventListener("click", function (event) {
+      if (menu.open && !menu.contains(event.target)) { menu.open = false; }
+    });
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") { menu.open = false; }
+    });
+  }
+
   function bandFor(probability) {
     for (var i = 0; i < riskBands.length; i += 1) {
       if (probability >= riskBands[i].min && probability < riskBands[i].max) {

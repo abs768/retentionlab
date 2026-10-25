@@ -2,7 +2,8 @@
   "name": "RetentionLab",
   "tagline": "End-to-End Customer Retention Analytics Platform",
   "repository_url": "https://github.com/abs768/retentionlab",
-  "hero_summary": "From churn prediction to retention decisions \u2014 a leakage-safe machine learning system combining calibrated risk modeling, constrained targeting, experiment design, model serving, and drift monitoring.",
+  "headline": "Spend the retention budget on the customers most likely to leave.",
+  "hero_summary": "RetentionLab ranks 7,043 telecom customers by calibrated churn risk. Contacting the riskiest 20% reaches 51.1% of churners, 2.55x random outreach. It also sizes the A/B test needed to prove an offer works, and serves the model through a checksum-verified FastAPI inference service.",
   "model_version": "churnguard-hgb-calibrated-v1",
   "model_sha256": "cf3addc6f6c93474c8bf7fe1f5f875bacd815df2c6d87a061170c1d76c7af581",
   "generated_from": {
@@ -35,7 +36,7 @@
     {
       "value": "2.55x",
       "label": "Lift vs Random Targeting",
-      "detail": "Retrospective ranking, not a causal effect"
+      "detail": "vs. random outreach of the same size"
     }
   ],
   "decision_flow": [
