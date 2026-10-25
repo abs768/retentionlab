@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from churnguard import experimentation as ex
+from retentionlab import experimentation as ex
 
 
 def test_smaller_effects_require_larger_samples() -> None:

@@ -1,4 +1,4 @@
-"""Small pre-specified inferential section: chi-square tests of independence.
+"""Pre-specified association tests: chi-square tests of independence with Cramér's V.
 
 These tests describe association between a categorical attribute and observed
 churn in this observational sample. They are not evidence of causation, and the

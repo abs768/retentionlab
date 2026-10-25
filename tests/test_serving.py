@@ -250,12 +250,12 @@ def test_metrics_increment_and_no_customer_labels(client, sample):
     client.post("/batch-predict", json={"customers": [sample] * 3})
     client.post("/monitor/drift", json={"customers": [sample]})
     text = client.get("/metrics").text
-    assert 'churnguard_inference_requests_total{endpoint="/predict"} 2.0' in text
-    assert 'churnguard_inference_errors_total{endpoint="/predict"} 1.0' in text
-    assert "churnguard_predictions_total 4.0" in text
-    assert "churnguard_drift_checks_total 1.0" in text
-    assert "churnguard_inference_latency_seconds_count" in text
-    assert "churnguard_batch_size_count 2.0" in text
+    assert 'retentionlab_inference_requests_total{endpoint="/predict"} 2.0' in text
+    assert 'retentionlab_inference_errors_total{endpoint="/predict"} 1.0' in text
+    assert "retentionlab_predictions_total 4.0" in text
+    assert "retentionlab_drift_checks_total 1.0" in text
+    assert "retentionlab_inference_latency_seconds_count" in text
+    assert "retentionlab_batch_size_count 2.0" in text
     assert sample["customerID"] not in text
     for metric in client.app.state.metrics.registry.collect():
         for row in metric.samples:

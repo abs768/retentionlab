@@ -22,11 +22,11 @@ import pandas as pd
 from sklearn.base import clone
 
 from . import (
+    association,
     config,
     data,
     evaluation,
     experimentation,
-    inference,
     models,
     policy,
     reporting,
@@ -209,7 +209,7 @@ def run_pipeline(
         ].iloc[0]
     )
     experiment_table = experimentation.build_experiment_design_table(high_risk_baseline)
-    chi_square_summary, chi_square_details = inference.run_chi_square_suite(prepared)
+    chi_square_summary, chi_square_details = association.run_chi_square_suite(prepared)
 
     artifacts: dict[str, str] = {}
     if save_artifacts:

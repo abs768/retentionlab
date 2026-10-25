@@ -7,7 +7,7 @@ from app.config import Settings
 from app.model_service import artifact_sha256
 from app.monitoring import build_profile
 
-from churnguard import config, data
+from retentionlab import config, data
 
 
 def main():

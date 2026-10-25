@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from churnguard import policy
+from retentionlab import policy
 
 
 def test_perfect_ranking_captures_every_churner_within_capacity() -> None:

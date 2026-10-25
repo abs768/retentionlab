@@ -6,13 +6,13 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from churnguard import config, inference, models, pipeline
+from retentionlab import association, config, models, pipeline
 
 
 def test_chi_square_reports_statistic_p_value_and_effect_size(
     prepared_df: pd.DataFrame,
 ) -> None:
-    summary, details = inference.run_chi_square_suite(prepared_df)
+    summary, details = association.run_chi_square_suite(prepared_df)
     assert list(summary["feature"]) == list(config.CHI_SQUARE_FEATURES)
     assert (summary["chi2_statistic"] > 0).all()
     assert ((summary["p_value"] >= 0) & (summary["p_value"] <= 1)).all()
@@ -26,7 +26,7 @@ def test_chi_square_reports_statistic_p_value_and_effect_size(
 
 def test_cramers_v_is_zero_for_independent_variables() -> None:
     independent = np.array([[50, 50], [50, 50]])
-    assert inference.cramers_v(independent, chi2=0.0) == pytest.approx(0.0)
+    assert association.cramers_v(independent, chi2=0.0) == pytest.approx(0.0)
 
 
 def test_model_selection_uses_pr_auc_not_accuracy() -> None:

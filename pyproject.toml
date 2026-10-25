@@ -3,7 +3,7 @@ requires = ["setuptools>=68"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "churnguard"
+name = "retentionlab"
 version = "0.2.0"
 description = "End-to-end retention intelligence with calibrated ML serving and monitoring"
 readme = "README.md"
@@ -35,8 +35,8 @@ dev = [
 ]
 
 [tool.setuptools]
-packages = ["churnguard", "app"]
-package-dir = {churnguard = "src/churnguard", app = "app"}
+packages = ["retentionlab", "app"]
+package-dir = {retentionlab = "src/retentionlab", app = "app"}
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
@@ -53,4 +53,4 @@ select = ["E", "F", "W", "I", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 # Preserve the existing Python 3.9 analytical implementation unchanged.
-"src/churnguard/evaluation.py" = ["B905"]
+"src/retentionlab/evaluation.py" = ["B905"]

@@ -1,4 +1,4 @@
-"""ChurnGuard: customer retention decision and experimentation engine.
+"""RetentionLab: customer retention decision and experimentation engine.
 
 A time-boxed, end-to-end retention project on the IBM Telco churn dataset:
 validated data, two contrasting models, calibrated probabilities, an outreach
@@ -11,12 +11,12 @@ from __future__ import annotations
 __version__ = "0.2.0"
 
 __all__ = [
+    "association",
     "config",
     "data",
     "evaluation",
     "experimentation",
     "features",
-    "inference",
     "models",
     "pipeline",
     "policy",

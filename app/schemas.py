@@ -5,7 +5,7 @@ from typing import Annotated, Literal
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 from app.config import MAX_BATCH_SIZE
-from churnguard.config import EXPECTED_COLUMNS, ID_COLUMN, TARGET_COLUMN
+from retentionlab.config import EXPECTED_COLUMNS, ID_COLUMN, TARGET_COLUMN
 
 RAW_FEATURES = tuple(c for c in EXPECTED_COLUMNS if c not in (ID_COLUMN, TARGET_COLUMN))
 YesNo = Literal["Yes", "No"]

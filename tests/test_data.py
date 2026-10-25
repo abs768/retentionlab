@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import pytest
 
-from churnguard import config, data
+from retentionlab import config, data
 
 
 def test_raw_data_has_expected_schema_and_row_count(raw_df: pd.DataFrame) -> None:

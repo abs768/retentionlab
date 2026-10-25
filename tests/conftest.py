@@ -13,7 +13,7 @@ SRC = PROJECT_ROOT / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from churnguard import config, data  # noqa: E402
+from retentionlab import config, data  # noqa: E402
 
 
 @pytest.fixture(scope="session")

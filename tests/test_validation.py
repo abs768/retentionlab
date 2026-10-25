@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pandas as pd
 
-from churnguard import validation
+from retentionlab import validation
 
 
 def test_real_dataset_passes_validation_with_total_charges_warning(
