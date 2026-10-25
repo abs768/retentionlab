@@ -16,7 +16,7 @@ knows who to contact first, then serves that ranking through a FastAPI service.
 - `tests/` — pytest suite for both halves.
 - `diagrams/uml_final.mmd` — the class/module design. `diagrams/uml.mmd` is a copy of it.
 
-## Current phase: Phase 7 — documentation and portfolio polish
+## Current phase: Phase 6 — documentation and portfolio polish
 - Allowed: `README.md`, `AGENTS.md`, `reflection.md`, `ai_interactions.md`, `diagrams/`, `docs/`.
 - Not allowed: any change to `src/`, `app/`, `scripts/`, `tests/`, `models/`, `artifacts/` or `reports/`.
 - Every number written in the README must come from a file in `reports/` or `artifacts/`.
