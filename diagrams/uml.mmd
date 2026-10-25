@@ -1,5 +1,6 @@
 %% RetentionLab: final design, matching the code on main.
-%% Top half: the analytical package (src/churnguard), unchanged since Phase 1.
+%% Top half: the analytical package (src/retentionlab). Phase 1 logic is unchanged; the package
+%% was renamed from churnguard and the chi-square module from inference to association in Phase 6.
 %% Bottom half: the serving layer (app/) added in Phase 2 and the landing page added in Phases 3-4.
 %% Modules are drawn as <<module>> boxes listing their public functions;
 %% real classes list their fields. Pydantic models are marked <<schema>>.
@@ -82,7 +83,7 @@ classDiagram
         +build_experiment_design_table(baseline_rate) DataFrame
     }
 
-    class inference {
+    class association {
         <<module>>
         +cramers_v(contingency, chi2) float
         +chi_square_test(df, feature) dict
@@ -242,7 +243,7 @@ classDiagram
     pipeline ..> evaluation : 4. score test once
     pipeline ..> policy : 5. capacity policy
     pipeline ..> experimentation : 6. size an RCT
-    pipeline ..> inference : 7. chi-square tests
+    pipeline ..> association : 7. chi-square tests
     pipeline ..> reporting : 8. resume facts
     pipeline --> PipelineResult : returns
     BatchRequest *-- Customer : 1..1000

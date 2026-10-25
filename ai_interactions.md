@@ -100,9 +100,11 @@ than typed by hand, and that the demos call the real `/predict` and `/rank` endp
 the live service loaded the checksum-verified model, and live `/predict` matched the local result
 for the same input (`reports/deployment.json`).
 
-## Phase 6 — Documentation and portfolio polish (this branch)
+## Phase 6 — Documentation, naming and portfolio polish (this branch)
 
-**What I asked for:** clean the repository up in the same structure as my CodePath AI110 projects.
+**What I asked for:** clean the repository up in the same structure as my CodePath AI110 projects,
+use standard industry terminology in the docs, and make the code match the name and design the
+docs describe.
 
 **What Claude did:**
 - Re-ran the full verification on Python 3.10: 89 tests passed, the model checksum matched, and
@@ -111,6 +113,17 @@ for the same input (`reports/deployment.json`).
   (for example, saying both "no deployment attempted" and "deployed and verified"), and fixed them.
 - Wrote `diagrams/uml_draft.mmd` and `diagrams/uml_final.mmd` from the actual code, restructured
   the README, and added this file, `AGENTS.md` and `reflection.md`.
+- Renamed the analytical package from its working name `churnguard` to `retentionlab`, renamed
+  the chi-square module from `inference` to `association` (so it is no longer confused with
+  `app/inference.py`, which does model inference), and renamed the Prometheus metrics to
+  `retentionlab_*`. Checked first that the model file does not reference the package name, so the
+  rename could not affect it.
+- Kept the model version ID `churnguard-hgb-calibrated-v1` unchanged, because a deployed
+  artifact's version ID should never be rewritten.
 
-**What I checked:** that every number in the new README still passes
-`scripts/verify_readme_claims.py`, and that no code, test, model or report file was changed.
+**What I checked (acceptance criteria for this phase):**
+- The model file's SHA256 is byte-for-byte unchanged.
+- A fresh pipeline run under the new package name reproduces the saved results: test ROC-AUC 0.855,
+  PR-AUC 0.670, and 143 of 280 churners reached at 20% capacity.
+- 89 tests pass, Ruff is clean, and 184 of 184 README numbers are verified.
+- The regenerated serving evidence differs from the old one only in the metric names.

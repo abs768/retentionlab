@@ -23,7 +23,8 @@ splits the analysis into modules that each do one job:
   validation and test sets always travel together.
 - **`features` and `models`** build the preprocessors and the two candidate models, always inside
   a `Pipeline` so preprocessing can only be fitted on training rows.
-- **`evaluation`, `policy`, `experimentation` and `inference`** each answer one business
+- **`evaluation`, `policy`, `experimentation` and `association`** (called `inference` in
+  Phase 1) each answer one business
   question: how good is the ranking, how far does a budget go, how big must a test be, and which
   features are associated with churn.
 - **`pipeline`** is the only module that knows the order of the steps. It returns one
@@ -31,20 +32,21 @@ splits the analysis into modules that each do one job:
 
 I reviewed this design before approving it. What I checked was whether each module could be
 tested on its own and whether the test set could reach any decision. Keeping `pipeline` as the
-single orchestrator made the second question easy to answer: the test split is used in exactly
-one function, `evaluate_on_test`, after both selection steps.
+single orchestrator made the second question easy to answer: the holdout test set is used in
+exactly one function, `evaluate_on_test`, after both selection steps.
 
 **1b. Design changes**
 
 Comparing [`uml_draft.mmd`](diagrams/uml_draft.mmd) with [`uml_final.mmd`](diagrams/uml_final.mmd)
-shows how the design grew. The analytical modules did not change after Phase 1, apart from `reporting` gaining the
+shows how the design grew. The analytical modules' logic did not change after Phase 1, apart from `reporting` gaining the
 serving facts it writes out; the serving layer was added around them:
 
 - **`ModelService`** loads the frozen model once and verifies it before use.
 - **Pydantic schemas** (`Customer`, `BatchRequest`, `RankRequest`, `Prediction`,
   `RankingResult`) define the API contract.
-- **`app.inference.customers_to_frame`** is the one adapter every endpoint uses, so features
-  always reach the model in the same order and types.
+- **`app.inference.customers_to_frame`** is the one feature adapter every endpoint uses, so
+  features always reach the model in the same order and types. This is what prevents
+  training–serving skew.
 - **`monitoring`** builds its drift reference by calling the original `data.make_splits` and
   using only the training rows, so the serving layer reuses the analysis instead of
   re-implementing it.
@@ -53,14 +55,21 @@ The decision I care most about here is that the model was **not** retrained for 
 API uses the exact file the analysis produced, verified by checksum, so every metric in the
 README describes the model that is actually served.
 
+In Phase 6 I renamed the package from its working name `churnguard` to `retentionlab` and the
+chi-square module from `inference` to `association`, because two different modules called
+`inference` (statistical inference and model inference) was confusing. The rename was purely
+structural: the model file's checksum and every saved metric stayed identical. The model's version
+ID still says `churnguard`, on purpose: a deployed artifact's ID should never be rewritten.
+
 ---
 
 ## 2. Modeling Logic and Tradeoffs
 
 **a. Constraints and priorities**
 
-- **Budget first.** A retention team can only contact a fraction of customers, so the question
-  is ranking under a capacity limit, not overall accuracy.
+- **Budget first.** A retention team can only contact a fraction of customers, so this is
+  capacity-constrained targeting: what matters is recall@k and precision@k at the capacity the
+  team actually has, not overall accuracy.
 - **Probabilities must mean something.** Calibration matters because a business would multiply
   risk by customer value; a well-ordered but miscalibrated score would mislead that math.
 - **Honesty about causality.** The data has no record of any retention action, so the project
@@ -68,7 +77,8 @@ README describes the model that is actually served.
 
 **b. Tradeoffs**
 
-- **PR-AUC over accuracy or F1.** The gradient-boosting model won on PR-AUC (0.643 vs 0.628)
+- **PR-AUC over accuracy or F1.** In the champion/challenger comparison, the gradient-boosting
+  challenger won on PR-AUC (0.643 vs 0.628)
   and Brier score but lost on F1. Picking by F1 would have chosen the other model for reasons
   that don't match the business use. The margin is small, and the README says so.
 - **Calibration helped only slightly.** Sigmoid calibration improved validation Brier from
@@ -77,7 +87,7 @@ README describes the model that is actually served.
 - **No hyperparameter search.** With about 1,000 validation rows, an aggressive search mostly
   overfits the validation set. Fixed, conservative settings were a deliberate choice.
 - **Power analysis instead of an effect estimate.** Rather than inventing a treatment effect, the
-  project sizes the experiment that could measure one: about 3,915 customers per arm to detect a
+  project sizes the A/B test that could measure one: about 3,915 customers per arm to detect a
   3-point drop at 80% power.
 
 ---
@@ -86,7 +96,8 @@ README describes the model that is actually served.
 
 **a. How I used Codex**
 
-My role was the human in the loop. Each phase followed the same cycle: I described the idea,
+This was an agentic coding workflow with me as the human in the loop. Each phase followed the
+same cycle: I described the idea,
 Codex proposed a design, I checked whether that design made sense for the problem, and only then
 did it write the modular Python files. After each build I ran the tests and read the generated
 reports before starting the next phase. The full phase log is in
@@ -100,10 +111,11 @@ reports before starting the next phase. The full phase log is in
   preprocessing is fitted on training data only. Tests now enforce both.
 - **Claims against evidence.** Every number in the README is checked by
   `scripts/verify_readme_claims.py`, so the agent could not write a result the pipeline did not produce.
-- **"Done" means executed.** When something could not be run (the Docker daemon was unavailable,
+- **Definition of done: executed, not claimed.** When something could not be run (the Docker daemon was unavailable,
   remote CI had not run yet), it was recorded as untested instead of described as working.
-- **Scope of the serving phase.** I required the analytical code and the model file to stay
-  unchanged, and confirmed it with a full rerun that reproduced every ranking.
+- **Acceptance criteria per phase.** For the serving phase, the analytical code and the model
+  file had to stay unchanged, confirmed by a full rerun that reproduced every ranking. For the
+  rename in Phase 6, the model checksum and every saved metric had to come out identical.
 
 **c. What I learned about being the lead**
 

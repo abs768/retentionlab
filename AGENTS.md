@@ -7,7 +7,7 @@ Read this whole file before the first edit of a session.
 RetentionLab ranks telecom customers by churn risk so a retention team with limited capacity
 knows who to contact first, then serves that ranking through a FastAPI service.
 
-- `src/churnguard/` — the analytical pipeline: validation, splits, models, calibration,
+- `src/retentionlab/` — the analytical pipeline: validation, splits, models, calibration,
   evaluation, retention policy, experiment sizing, chi-square tests. Entry point:
   `pipeline.run_pipeline()`, called by `scripts/run_pipeline.py`.
 - `app/` — the serving layer: typed schemas, model loading, scoring, ranking, drift
@@ -16,22 +16,25 @@ knows who to contact first, then serves that ranking through a FastAPI service.
 - `tests/` — pytest suite for both halves.
 - `diagrams/uml_final.mmd` — the class/module design. `diagrams/uml.mmd` is a copy of it.
 
-## Current phase: Phase 6 — documentation and portfolio polish
-- Allowed: `README.md`, `AGENTS.md`, `reflection.md`, `ai_interactions.md`, `diagrams/`, `docs/`.
-- Not allowed: any change to `src/`, `app/`, `scripts/`, `tests/`, `models/`, `artifacts/` or `reports/`.
+## Current phase: Phase 6 — documentation, naming and portfolio polish
+- Allowed: documentation, diagrams, and renames that do not change behavior.
+- Not allowed: any change to model logic, the model file, or the saved results in `reports/tables/`.
+- Acceptance criteria: the model SHA256 is unchanged, a pipeline rerun reproduces the saved
+  metrics, and every check under "How to verify" passes.
 - Every number written in the README must come from a file in `reports/` or `artifacts/`.
   Run `python scripts/verify_readme_claims.py` after any README edit; it must report all claims verified.
 
 ## Rules that always apply
 - **The model is frozen.** Never retrain, re-serialize or replace `models/final_model.joblib`.
-  Its SHA256 is checked at startup and by `scripts/verify_model_artifact.py`.
+  Its SHA256 is checked at startup and by `scripts/verify_model_artifact.py`. Its version ID
+  (`churnguard-hgb-calibrated-v1`) is immutable; a new model gets a new ID.
 - **The test set is scored once.** Model and calibration choices come from the validation split only.
 - **No leakage.** `customerID` and the target never reach a model. Every transformer is fitted
   inside a `Pipeline` on the training split.
 - **No causal claims.** The data has no treatment variable. Lift means "ranks churners well",
   never "saves customers". Experiment effect sizes are assumptions for sizing.
 - **One adapter.** Every endpoint converts customers with `app.inference.customers_to_frame`.
-  Don't build feature frames anywhere else.
+  Don't build feature frames anywhere else; a second path invites training–serving skew.
 - **No request-time training or loading.** The model loads once, in the FastAPI lifespan.
 - **Never log customer payloads** or use IDs or raw values as metric labels.
 - **New dependencies need a reason.** Ask before adding one; pin it in both `pyproject.toml`
@@ -51,7 +54,7 @@ ruff check .
 python scripts/verify_readme_claims.py
 ```
 
-- A change is not done until all five pass. Report the actual output, not "should pass".
+- Definition of done: all five pass. Report the actual output, not "should pass".
 - If a test fails, explain why before changing code. Never edit a test just to make it pass.
 - If you could not run a command, say so plainly instead of implying it passed.
 

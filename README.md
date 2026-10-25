@@ -13,8 +13,9 @@ It uses IBM's fictional Telco sample (7,043 customers). Every number in this REA
 back from a saved artifact by `scripts/verify_readme_claims.py`, and the project is explicit
 about what the data can and cannot show: it measures who looks risky, not who would be saved.
 
-> The Python package and model artifact keep their original internal name (`churnguard`).
-> Renaming them would invalidate the frozen, checksum-verified artifact for no public benefit.
+> The project began under the working name ChurnGuard. The code now uses `retentionlab`
+> throughout; the one exception is the model version ID, `churnguard-hgb-calibrated-v1`.
+> Version IDs are immutable, so the frozen artifact keeps the ID it was built and deployed with.
 
 ## At a Glance
 
@@ -29,7 +30,7 @@ about what the data can and cannot show: it measures who looks risky, not who wo
 
 [Features](#features) · [Architecture](#architecture) · [Getting Started](#getting-started) ·
 [Demo Walkthrough](#demo-walkthrough) · [Results](#dataset) · [Serving](#ml-serving-architecture) ·
-[Testing](#testing) · [Deployment](#public-deployment) · [What This Project Does NOT Claim](#what-this-project-does-not-claim) ·
+[Testing](#testing) · [Deployment](#public-deployment) · [Non-Goals](#what-this-project-does-not-claim) ·
 [Project Documents](#project-documents)
 
 ## Business Problem
@@ -41,30 +42,34 @@ project answers six questions:
 
 1. **Who is most likely to churn?** — a ranking problem.
 2. **Are the predicted probabilities trustworthy?** — a calibration problem, distinct from ranking.
-3. **Under a fixed outreach budget (10% / 20% / 30% of customers), how many actual churners does risk-ranked targeting reach versus random outreach?** — an operating-policy problem.
-4. **How large would a randomized retention experiment need to be to prove an intervention works?** — a causal-design problem this dataset cannot answer directly.
-5. **How can the trained model be served reliably?** — a typed API, verified artifact, startup readiness, and vectorized inference.
+3. **Under a fixed outreach budget (10% / 20% / 30% of customers), how many actual churners does risk-ranked targeting reach versus random outreach?** — a capacity-constrained targeting problem, measured with recall@k, precision@k and lift.
+4. **How large would a randomized retention experiment need to be to prove an intervention works?** — an A/B test design problem this observational dataset cannot answer directly.
+5. **How can the trained model be served reliably?** — a typed inference service with a verified model artifact, readiness probes and vectorized batch scoring.
 6. **How can data drift and service health be monitored?** — training-only reference distributions and instance-local Prometheus metrics.
+
+**Success metrics:** PR-AUC for ranking quality, Brier score for calibration, recall@k and lift
+at each capacity level for business impact. **Non-goals:** causal impact estimates, revenue
+modeling and real-time retraining (see [Non-Goals](#what-this-project-does-not-claim)).
 
 ## Features
 
-**Data science (`src/churnguard/`)**
+**Data science (`src/retentionlab/`)**
 
-- **Data validation** — schema, row count, duplicate IDs, target values and numeric parsing are checked on every run; the 11 blank `TotalCharges` values are traced to zero-tenure customers.
-- **Leakage-safe modeling** — a logistic regression baseline and a HistGradientBoosting challenger, each wrapped in a `Pipeline` fitted on the training split only.
-- **Selection by PR-AUC, not accuracy** — the model and calibration are chosen on the validation split; the test split is scored exactly once.
+- **Data validation (data contract)** — schema, row count, duplicate IDs, target values and numeric parsing are checked on every run; the 11 blank `TotalCharges` values are traced to zero-tenure customers.
+- **Leakage-safe modeling** — a champion/challenger comparison between a logistic regression baseline and a HistGradientBoosting challenger, each wrapped in a `Pipeline` fitted on the training split only.
+- **Selection by PR-AUC, not accuracy** — model and calibration selection happen on the validation split; the holdout test set is scored exactly once.
 - **Probability calibration** — sigmoid and isotonic calibration compared against the uncalibrated model.
-- **Capacity-based retention policy** — churners reached, precision and lift at 10%, 20% and 30% outreach capacity.
-- **Experiment design** — sample size per arm and minimum detectable effect for a future randomized retention test.
+- **Capacity-based targeting policy** — recall@k (churners reached), precision@k and lift at 10%, 20% and 30% outreach capacity, plus a cumulative gains curve.
+- **Experiment design** — power analysis giving sample size per arm and minimum detectable effect (MDE) for a future randomized retention A/B test.
 - **Association tests** — three pre-specified chi-square tests with Cramér's V.
 
 **ML engineering (`app/`)**
 
-- **Typed API** — Pydantic schemas that reject unknown categories, negative charges and extra fields.
-- **Verified model loading** — SHA256, scikit-learn version, feature contract and a smoke prediction are checked once at startup; failures turn `/ready` and scoring endpoints into 503s.
+- **Typed inference service** — Pydantic schemas act as the API contract and reject unknown categories, negative charges and extra fields.
+- **Verified model artifact** — SHA256, scikit-learn version, feature contract and a smoke prediction are checked once at startup; failures fail closed, turning the `/ready` probe and scoring endpoints into 503s.
 - **Scoring and ranking** — `/predict`, `/batch-predict` (up to 1,000 customers in one vectorized call) and `/rank` with a capacity fraction or top-N.
-- **Drift monitoring** — PSI and categorical total variation against a training-only reference profile.
-- **Observability** — six Prometheus metric families; customer payloads are never logged.
+- **Data drift monitoring** — Population Stability Index (PSI) and categorical total variation against a training-only reference profile.
+- **Observability** — six Prometheus metric families (request count, errors, latency histogram, batch size); customer payloads are never logged.
 - **Landing page** — a server-rendered page whose every figure is generated from the saved artifacts, with live demos that call the real API.
 
 ## Architecture
@@ -108,19 +113,19 @@ shows the Phase 1 design, before the serving layer existed. Each module has one 
 
 | Module | Responsibility |
 | --- | --- |
-| `churnguard/config.py` | Every constant: paths, seed, split sizes, capacities, experiment grid |
-| `churnguard/validation.py` | Raw-data checks and the validation report |
-| `churnguard/data.py` | Loading, numeric coercion, target encoding, stratified three-way split (`DataSplits`) |
-| `churnguard/features.py` | Feature typing and the two preprocessors (linear and tree) |
-| `churnguard/models.py` | Baseline, challenger and calibrated model builders |
-| `churnguard/evaluation.py` | Metrics and evaluation plots |
-| `churnguard/policy.py` | Capacity-based retention policy and cumulative gains |
-| `churnguard/experimentation.py` | Sample size and minimum detectable effect |
-| `churnguard/inference.py` | Chi-square tests and Cramér's V |
-| `churnguard/pipeline.py` | Orchestrates every stage and returns `PipelineResult` |
+| `retentionlab/config.py` | Every constant: paths, seed, split sizes, capacities, experiment grid |
+| `retentionlab/validation.py` | Raw-data checks and the validation report |
+| `retentionlab/data.py` | Loading, numeric coercion, target encoding, stratified three-way split (`DataSplits`) |
+| `retentionlab/features.py` | Feature typing and the two preprocessors (linear and tree) |
+| `retentionlab/models.py` | Baseline, challenger and calibrated model builders |
+| `retentionlab/evaluation.py` | Metrics and evaluation plots |
+| `retentionlab/policy.py` | Capacity-based retention policy and cumulative gains |
+| `retentionlab/experimentation.py` | Sample size and minimum detectable effect |
+| `retentionlab/association.py` | Chi-square association tests and Cramér's V |
+| `retentionlab/pipeline.py` | Orchestrates every stage and returns `PipelineResult` |
 | `app/schemas.py` | `Customer`, `BatchRequest`, `RankRequest`, `Prediction`, `RankingResult` |
 | `app/model_service.py` | `ModelService`: verified artifact loading |
-| `app/inference.py` | The single customers-to-DataFrame adapter and checked scoring |
+| `app/inference.py` | The single feature adapter (prevents training–serving skew) and checked scoring |
 | `app/ranking.py` | Capacity selection and tie-stable ranking |
 | `app/monitoring.py` | Reference profile, PSI and drift status |
 | `app/metrics.py` | `ServiceMetrics`: the Prometheus registry |
@@ -222,7 +227,7 @@ Run `python scripts/download_data.py` to fetch a pinned upstream revision and ve
 See [dataset provenance](data/README.md): the upstream code-pattern license does not clearly
 establish a separate dataset redistribution grant, so the raw CSV is excluded from the current
 tracked tree. The original commit still contains it; resolve rights before publishing that history.
-The root [MIT license](LICENSE) covers original ChurnGuard code, not third-party data.
+The root [MIT license](LICENSE) covers original RetentionLab code, not third-party data.
 
 | Property | Value |
 | --- | --- |
@@ -339,7 +344,7 @@ Each test-set customer receives a calibrated churn probability and is ranked hig
 first. Source: `reports/tables/retention_policy.csv`, plot:
 `reports/figures/cumulative_gains.png`.
 
-| Capacity | Contacted | Churners captured | Capture rate | Precision among contacted | Lift vs random |
+| Capacity (k) | Contacted | Churners captured | Capture rate (recall@k) | Precision among contacted (precision@k) | Lift vs random |
 | --- | --- | --- | --- | --- | --- |
 | Top 10% | 106 | 80 of 280 | 28.6% | 75.5% | **2.85×** |
 | Top 20% | 212 | 143 of 280 | 51.1% | 67.5% | **2.55×** |
@@ -430,8 +435,8 @@ the p-values are effectively guaranteed to be small; Cramér's V is the more inf
 
 `app/model_service.py` reads the trusted joblib bytes once at startup, verifies SHA256 before
 deserialization, checks the scikit-learn version, feature contract and class order, then runs
-smoke inference. A failure leaves `/health` live while `/ready` and model endpoints return
-503. Restart the service after replacing an artifact; there is no request-time loading.
+smoke inference. A failure leaves the `/health` liveness probe up while the `/ready` readiness
+probe and model endpoints return 503 (fail closed). Restart the service after replacing an artifact; there is no request-time loading.
 
 `app/schemas.py` defines all raw IBM feature domains. `customerID` is optional response metadata;
 `Churn` and extra fields are rejected. Nonnegative finite charges, nonnegative integer tenure,
@@ -440,7 +445,8 @@ number, blank text, or null; blanks/null become numeric NaN for the original mod
 `TotalCharges` is allowed at any tenure so legitimate missingness can be monitored. Other
 features are required. No arbitrary upper cap rejects unusually high but finite charges.
 
-Every scoring and monitoring endpoint uses the same `customers_to_frame` adapter. It removes
+Every scoring and monitoring endpoint uses the same `customers_to_frame` adapter, so training
+and serving see features in exactly the same form (no training–serving skew). It removes
 identifiers, fixes the raw feature order and numeric dtypes, and preserves row order. Batch
 inference makes one `predict_proba` call for the whole DataFrame. CPU work runs in FastAPI's
 synchronous endpoint thread pool. Native numerical threads are bounded in the documented
@@ -488,8 +494,8 @@ causally prevents churn.**
 A minimal executable request using an actual training-row example from metadata:
 
 ```bash
-python -c 'import json; print(json.dumps(json.load(open("artifacts/model/model_metadata.json"))["smoke_input"]))' > /tmp/churnguard-customer.json
-curl -fsS -H 'Content-Type: application/json' --data-binary @/tmp/churnguard-customer.json http://127.0.0.1:8000/predict
+python -c 'import json; print(json.dumps(json.load(open("artifacts/model/model_metadata.json"))["smoke_input"]))' > /tmp/retentionlab-customer.json
+curl -fsS -H 'Content-Type: application/json' --data-binary @/tmp/retentionlab-customer.json http://127.0.0.1:8000/predict
 ```
 
 ## Artifact Integrity
@@ -551,12 +557,12 @@ failures and drift warnings. Validation errors omit input payloads; clients rece
 
 Prometheus exposes these metric families:
 
-- `churnguard_inference_requests_total` — POST attempts at predict, batch-predict and rank.
-- `churnguard_inference_errors_total` — failed requests, including schema rejection and 503s.
-- `churnguard_predictions_total` — customer probabilities returned by scoring.
-- `churnguard_inference_latency_seconds` — request duration, including validation and response work.
-- `churnguard_batch_size` — validated batch sizes reaching scoring.
-- `churnguard_drift_checks_total` — completed drift calculations.
+- `retentionlab_inference_requests_total` — POST attempts at predict, batch-predict and rank.
+- `retentionlab_inference_errors_total` — failed requests, including schema rejection and 503s.
+- `retentionlab_predictions_total` — customer probabilities returned by scoring.
+- `retentionlab_inference_latency_seconds` — request duration, including validation and response work.
+- `retentionlab_batch_size` — validated batch sizes reaching scoring.
+- `retentionlab_drift_checks_total` — completed drift calculations.
 
 The only application label is the bounded inference endpoint; histogram boundaries add the
 standard `le` label. IDs, emails and raw feature values never become labels. Each app instance
@@ -596,7 +602,7 @@ Latest local run (Python 3.10.20): **89 passed** in under 10 seconds, with zero 
 | --- | --- |
 | `test_data.py`, `test_validation.py` | Loading, coercion, splits, leakage checks, validation report |
 | `test_features_and_models.py` | Preprocessors, train-only fitting, model builders |
-| `test_policy.py`, `test_experimentation.py`, `test_inference_and_pipeline.py` | Policy math, sample sizes, chi-square, pipeline wiring |
+| `test_policy.py`, `test_experimentation.py`, `test_association_and_pipeline.py` | Policy math, sample sizes, chi-square, pipeline wiring |
 | `test_serving.py` | Artifact tampering, startup, schemas, ranking ties and capacity edges, safe errors, landing page |
 | `test_monitoring.py` | Training-only reference, PSI bins, synthetic shifts, missingness |
 
@@ -646,8 +652,8 @@ left visible rather than suppressed.
 ## Docker
 
 ```bash
-docker build -t churnguard:local .
-docker run --rm -p 8000:8000 churnguard:local
+docker build -t retentionlab:local .
+docker run --rm -p 8000:8000 retentionlab:local
 ```
 
 The image uses `python:3.10-slim`, a non-root runtime user, bounded native threads, startup
@@ -739,6 +745,8 @@ A repository-relative checkout is required to locate the artifact bundle; instal
 wheel without model/reference files is insufficient.
 
 ## What This Project Does NOT Claim
+
+These are the project's non-goals and the boundary of its claims.
 
 - **The data is observational.** It contains no record of any retention action, offer, or
   contact.
