@@ -16,7 +16,7 @@ jobs:
     env:
       OMP_NUM_THREADS: "1"
       OPENBLAS_NUM_THREADS: "1"
-      MPLCONFIGDIR: /tmp/churnguard-matplotlib
+      MPLCONFIGDIR: /tmp/retentionlab-matplotlib
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -28,7 +28,7 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[dev]"
       - name: Verify package and API imports
-        run: python -c "import churnguard; from app.main import app; print(app.title)"
+        run: python -c "import retentionlab; from app.main import app; print(app.title)"
       - name: Download and verify data
         run: python scripts/download_data.py
       - name: Lint
@@ -46,11 +46,11 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build
-        run: docker build -t churnguard:ci .
+        run: docker build -t retentionlab:ci .
       - name: Verify container endpoints
         run: |
-          docker run -d --name churnguard-ci -p 8000:8000 churnguard:ci
-          trap 'docker logs churnguard-ci; docker rm -f churnguard-ci' EXIT
+          docker run -d --name retentionlab-ci -p 8000:8000 retentionlab:ci
+          trap 'docker logs retentionlab-ci; docker rm -f retentionlab-ci' EXIT
           for attempt in $(seq 1 30); do
             if curl -fsS http://localhost:8000/ready; then break; fi
             sleep 2

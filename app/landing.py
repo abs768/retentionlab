@@ -126,6 +126,16 @@ WARN_ICON = (
 )
 
 
+def _disclosure(title: str, note: str, body: str, element_id: str = "") -> str:
+    """Collapsible block for supporting detail, so the page stays short."""
+    id_attr = f' id="{element_id}"' if element_id else ""
+    return (
+        f'<details class="disclosure"{id_attr}><summary><span><b>{escape(title)}</b>'
+        f'<span>{escape(note)}</span></span><span class="disclosure-icon" aria-hidden="true">'
+        f'</span></summary><div class="disclosure-body">{body}</div></details>'
+    )
+
+
 @lru_cache(maxsize=4)
 def load_facts(path: Path) -> dict[str, Any]:
     """Read the generated payload, degrading to a minimal header if it is absent."""
@@ -187,11 +197,11 @@ def render_form_fields() -> str:
             else:
                 controls.append(_select(name))
         blocks.append(
-            f'<div class="field-group"><h3>{escape(group_name)}</h3>'
+            f'<div class="field-group group-{group_name.lower()}"><h3>{escape(group_name)}</h3>'
             f'{"".join(controls)}</div>'
         )
     blocks.append(
-        '<div class="field-group"><h3>Derived</h3>'
+        '<div class="field-group group-derived"><h3>Derived</h3>'
         '<div class="field"><label>Total charges</label>'
         '<div class="range-value" id="derived-total">—</div></div>'
         '<p class="note">Computed as tenure × monthly charges so the submitted record '
@@ -216,9 +226,8 @@ def _hero(facts: dict) -> str:
     return f"""
 <header class="hero" id="overview">
   <div class="wrap">
-    <p class="eyebrow">Churn modeling · Decision policy · Model serving</p>
-    <h1 class="hero-title">{name}</h1>
-    <p class="hero-sub">{escape(str(facts.get("tagline", "")))}</p>
+    <p class="eyebrow">{name} · Churn modeling · Targeting · ML serving</p>
+    <h1 class="hero-title">{escape(str(facts.get("headline", name)))}</h1>
     <p class="hero-copy">{escape(str(facts.get("hero_summary", "")))}</p>
     <div class="cta-row">
       <a class="btn btn-primary" href="#demo">Try the Model</a>
@@ -343,10 +352,13 @@ def _performance(facts: dict) -> str:
           <tbody>{cal_rows}</tbody></table></div>
       </div>
     </div>
-    <h3 style="margin:38px 0 14px">Generated diagnostics</h3>
-    <p class="note" style="margin-bottom:16px">These are the figures written by the analytical
-    pipeline, served directly from <code>reports/figures/</code>. Nothing is redrawn.</p>
-    <div class="figures">{figures}</div>
+    {_disclosure(
+        "Diagnostic charts",
+        "ROC, precision-recall, calibration and confusion matrix, written by the pipeline",
+        '<p class="note" style="margin:0 0 16px">Served directly from '
+        '<code>reports/figures/</code>; nothing is redrawn.</p>'
+        f'<div class="figures">{figures}</div>',
+    )}
   </div>
 </section>"""
 
@@ -590,12 +602,16 @@ def _engineering(facts: dict) -> str:
     <p class="eyebrow">Production engineering</p>
     <h2>What makes it a service rather than a notebook</h2>
     <div class="grid-3">{grid}</div>
-    <h3 style="margin:38px 0 14px">Technology</h3>
-    <div class="stack">{stack}</div>
-    <p class="note" style="margin-top:12px">Python {escape(str(eng.get("python_version", "")))} ·
-    scikit-learn {escape(str(eng.get("sklearn_version", "")))} — the deployed runtime installs the
-    same version that produced the serialized artifact. The Dockerfile is included in the
-    repository; container execution was not verified locally.</p>
+    {_disclosure(
+        "Technology stack",
+        "Python, scikit-learn, FastAPI, Pydantic, Prometheus, Docker, GitHub Actions, Vercel",
+        f'<div class="stack">{stack}</div>'
+        '<p class="note" style="margin-top:12px">Python '
+        f'{escape(str(eng.get("python_version", "")))} · scikit-learn '
+        f'{escape(str(eng.get("sklearn_version", "")))} — the deployed runtime installs the '
+        'same version that produced the serialized artifact. The Dockerfile is included in '
+        'the repository; container execution was not verified locally.</p>',
+    )}
   </div>
 </section>"""
 
@@ -616,6 +632,11 @@ def _drift(facts: dict) -> str:
   <div class="wrap">
     <p class="eyebrow">Drift monitoring</p>
     <h2>Watching the inputs, not just the outputs</h2>
+    <p class="lede">Each incoming batch is compared with the training data: Population Stability
+    Index for numeric features, total variation for categories, plus missingness checks.</p>
+    <details class="disclosure"><summary><span><b>How drift is scored</b><span>Monitored
+    features, PSI bands and what a warning means</span></span><span class="disclosure-icon"
+    aria-hidden="true"></span></summary><div class="disclosure-body">
     <div class="grid-2">
       <div class="card">
         <h3>Numeric drift — Population Stability Index</h3>
@@ -637,6 +658,7 @@ def _drift(facts: dict) -> str:
         project has no production traffic history.</p>
       </div>
     </div>
+    </div></details>
   </div>
 </section>"""
 
@@ -669,10 +691,13 @@ def _benchmark(facts: dict) -> str:
     single-customer request, not 500 times.</p>
     <div class="card">
       <div class="bench">{bars}</div>
-      <div class="table-scroll" style="margin-top:22px"><table>
+      <details class="disclosure disclosure-flat" style="margin-top:18px"><summary><span>
+        <b>Full latency table</b><span>p50 and p95, direct model call and through the API</span>
+        </span><span class="disclosure-icon" aria-hidden="true"></span></summary>
+        <div class="disclosure-body"><div class="table-scroll"><table>
         <thead><tr><th>Batch</th><th>Direct p50</th><th>Direct p95</th>
         <th>HTTP p50</th><th>HTTP p95</th></tr></thead>
-        <tbody>{table}</tbody></table></div>
+        <tbody>{table}</tbody></table></div></div></details>
       <div class="limit" style="margin-top:16px">{WARN_ICON}
         <span><span class="note-strong">Local FastAPI TestClient benchmark — not production
         network latency.</span> Measured in-process on
@@ -729,6 +754,11 @@ def _nav(facts: dict) -> str:
   <div class="nav-inner">
     <a class="brand" href="#overview">Retention<span>Lab</span></a>
     <div class="nav-links">{links}</div>
+    <details class="nav-menu">
+      <summary aria-label="Open section menu"><span class="nav-burger" aria-hidden="true">
+        <i></i><i></i><i></i></span>Menu</summary>
+      <div class="nav-menu-panel">{links}</div>
+    </details>
     <a class="nav-cta nav-icon" href="{repo}" target="_blank" rel="noopener noreferrer"
        aria-label="View RetentionLab on GitHub" title="View source on GitHub">{GITHUB_MARK}</a>
     <a class="nav-cta" href="/docs">API Docs</a>

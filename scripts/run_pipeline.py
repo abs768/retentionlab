@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Reproduce every ChurnGuard output with a single command.
+"""Reproduce every RetentionLab output with a single command.
 
 Usage:
     python scripts/run_pipeline.py [--raw-data PATH] [--no-save]
@@ -16,12 +16,12 @@ SRC = Path(__file__).resolve().parents[1] / "src"
 if str(SRC) not in sys.path:
     sys.path.insert(0, str(SRC))
 
-from churnguard import config  # noqa: E402
-from churnguard.pipeline import run_pipeline  # noqa: E402
+from retentionlab import config  # noqa: E402
+from retentionlab.pipeline import run_pipeline  # noqa: E402
 
 
 def parse_args() -> argparse.Namespace:
-    parser = argparse.ArgumentParser(description="Run the ChurnGuard pipeline.")
+    parser = argparse.ArgumentParser(description="Run the RetentionLab pipeline.")
     parser.add_argument(
         "--raw-data",
         type=Path,

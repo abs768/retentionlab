@@ -4,7 +4,7 @@
 import hashlib
 from urllib.request import urlopen
 
-from churnguard.config import RAW_DATA_PATH
+from retentionlab.config import RAW_DATA_PATH
 
 SOURCE_REVISION = "d5371f5d83a446ad5673cbcca3b814b926491f8a"
 SOURCE_URL = (

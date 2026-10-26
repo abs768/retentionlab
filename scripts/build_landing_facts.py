@@ -33,10 +33,13 @@ OUTPUT = ROOT / "artifacts" / "landing" / "landing_facts.json"
 REPOSITORY_URL = "https://github.com/abs768/retentionlab"
 PUBLIC_NAME = "RetentionLab"
 PUBLIC_TAGLINE = "End-to-End Customer Retention Analytics Platform"
-HERO_SUMMARY = (
-    "From churn prediction to retention decisions — a leakage-safe machine learning "
-    "system combining calibrated risk modeling, constrained targeting, experiment "
-    "design, model serving, and drift monitoring."
+HERO_HEADLINE = "Spend the retention budget on the customers most likely to leave."
+# Filled from the run summary in build_facts(); no number is typed here.
+HERO_SUMMARY_TEMPLATE = (
+    "RetentionLab ranks {rows} telecom customers by calibrated churn risk. Contacting the "
+    "riskiest 20% reaches {capture} of churners, {lift} random outreach. It also sizes the "
+    "A/B test needed to prove an offer works, and serves the model through a "
+    "checksum-verified FastAPI inference service."
 )
 
 # Display-only bands used by the demo UI. They are not a business decision
@@ -250,7 +253,12 @@ def build_facts() -> dict:
         "name": PUBLIC_NAME,
         "tagline": PUBLIC_TAGLINE,
         "repository_url": REPOSITORY_URL,
-        "hero_summary": HERO_SUMMARY,
+        "headline": HERO_HEADLINE,
+        "hero_summary": HERO_SUMMARY_TEMPLATE.format(
+            rows=f"{summary['n_rows']:,}",
+            capture=f"{top20['churner_capture_rate'] * 100:.1f}%",
+            lift=f"{top20['lift_vs_random']:.2f}x",
+        ),
         "model_version": verification["model_version"],
         "model_sha256": verification["model_sha256"],
         "generated_from": {
@@ -270,7 +278,7 @@ def build_facts() -> dict:
              "label": "Churners Captured",
              "detail": "within the highest-risk 20%"},
             {"value": f"{top20['lift_vs_random']:.2f}x", "label": "Lift vs Random Targeting",
-             "detail": "Retrospective ranking, not a causal effect"},
+             "detail": "vs. random outreach of the same size"},
         ],
         "decision_flow": [{"step": a, "detail": b} for a, b in DECISION_FLOW],
         "dataset": {

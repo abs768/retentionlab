@@ -13,7 +13,7 @@ from app.model_service import ModelService, artifact_sha256
 from app.schemas import RAW_FEATURES
 from sklearn.exceptions import InconsistentVersionWarning
 
-from churnguard import data
+from retentionlab import data
 
 
 def main():

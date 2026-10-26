@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from churnguard import config, data, evaluation, features, models
+from retentionlab import config, data, evaluation, features, models
 
 
 def test_infer_feature_types_partitions_columns_and_excludes_identifiers(

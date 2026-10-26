@@ -7,7 +7,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     OPENBLAS_NUM_THREADS=1 \
     MPLCONFIGDIR=/tmp/matplotlib
 WORKDIR /service
-RUN useradd --create-home --uid 10001 churnguard
+RUN useradd --create-home --uid 10001 retentionlab
 COPY requirements.txt pyproject.toml README.md ./
 COPY src ./src
 COPY app ./app
@@ -16,7 +16,7 @@ COPY models/final_model.joblib ./models/final_model.joblib
 COPY artifacts ./artifacts
 COPY scripts/verify_model_artifact.py ./scripts/verify_model_artifact.py
 RUN python scripts/verify_model_artifact.py
-USER churnguard
+USER retentionlab
 EXPOSE 8000
 HEALTHCHECK --interval=30s --timeout=5s --start-period=30s \
   CMD python -c "from urllib.request import urlopen; urlopen('http://127.0.0.1:8000/ready', timeout=4)"

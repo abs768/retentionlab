@@ -20,7 +20,7 @@ from app.model_service import ModelService  # noqa: E402
 from app.schemas import Customer  # noqa: E402
 from fastapi.testclient import TestClient  # noqa: E402
 
-from churnguard import data  # noqa: E402
+from retentionlab import data  # noqa: E402
 
 
 def measure(operation, warmup, iterations):

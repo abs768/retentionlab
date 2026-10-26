@@ -7,7 +7,7 @@ import re
 import pandas as pd
 from app.config import ROOT, Settings
 
-from churnguard.reporting import write_resume_facts
+from retentionlab.reporting import write_resume_facts
 
 
 def main():

@@ -18,7 +18,7 @@ from fastapi.routing import APIRoute
 
 def main():
     subprocess.run([sys.executable, "-m", "ruff", "check", "."], cwd=ROOT, check=True)
-    with tempfile.TemporaryDirectory(prefix="churnguard-tests-") as directory:
+    with tempfile.TemporaryDirectory(prefix="retentionlab-tests-") as directory:
         junit = Path(directory) / "results.xml"
         subprocess.run(
             [sys.executable, "-m", "pytest", "-q", f"--junitxml={junit}"], cwd=ROOT, check=True
@@ -52,12 +52,12 @@ def main():
         "categorical_drift_features": list(reference["categorical"]),
         "reference_row_count": reference["row_count"],
         "metrics": [
-            "churnguard_inference_requests_total",
-            "churnguard_inference_errors_total",
-            "churnguard_predictions_total",
-            "churnguard_inference_latency_seconds",
-            "churnguard_batch_size",
-            "churnguard_drift_checks_total",
+            "retentionlab_inference_requests_total",
+            "retentionlab_inference_errors_total",
+            "retentionlab_predictions_total",
+            "retentionlab_inference_latency_seconds",
+            "retentionlab_batch_size",
+            "retentionlab_drift_checks_total",
         ],
         "ci": "Configured for Python 3.10/3.12 and Docker; remote run not observed",
     }

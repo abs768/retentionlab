@@ -3,8 +3,8 @@
 !pyproject.toml
 !README.md
 !src/
-!src/churnguard/
-!src/churnguard/*.py
+!src/retentionlab/
+!src/retentionlab/*.py
 !app/
 !app/*.py
 !models/

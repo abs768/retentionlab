@@ -1,0 +1,267 @@
+%% RetentionLab: final design, matching the code on main.
+%% Top half: the analytical package (src/retentionlab). Phase 1 logic is unchanged; the package
+%% was renamed from churnguard and the chi-square module from inference to association in Phase 6.
+%% Bottom half: the serving layer (app/) added in Phase 2 and the landing page added in Phases 3-4.
+%% Modules are drawn as <<module>> boxes listing their public functions;
+%% real classes list their fields. Pydantic models are marked <<schema>>.
+classDiagram
+    direction TB
+
+    class config {
+        <<module>>
+        RANDOM_SEED = 42
+        TEST_SIZE = 0.15
+        VALIDATION_SIZE = 0.15
+        CALIBRATION_METHODS
+        POLICY_CAPACITY_FRACTIONS
+        EXPERIMENT_ABSOLUTE_REDUCTIONS
+        CHI_SQUARE_FEATURES
+    }
+
+    class validation {
+        <<module>>
+        +validate_raw_dataframe(df) dict
+        +save_validation_report(report, path) Path
+    }
+
+    class data {
+        <<module>>
+        +load_raw_data(path) DataFrame
+        +coerce_numeric_columns(df, columns) DataFrame
+        +encode_target(df) DataFrame
+        +prepare_dataset(df) DataFrame
+        +split_features_target(df) tuple
+        +make_splits(df, test_size, validation_size, random_state) DataSplits
+    }
+
+    class DataSplits {
+        <<NamedTuple>>
+        X_train: DataFrame
+        X_val: DataFrame
+        X_test: DataFrame
+        y_train: Series
+        y_val: Series
+        y_test: Series
+    }
+
+    class features {
+        <<module>>
+        +infer_feature_types(X) tuple
+        +build_linear_preprocessor(num, cat) ColumnTransformer
+        +build_tree_preprocessor(num, cat) ColumnTransformer
+    }
+
+    class models {
+        <<module>>
+        +build_baseline_model(num, cat) Pipeline
+        +build_challenger_model(num, cat) Pipeline
+        +build_candidate_models(X_train) dict
+        +build_calibrated_model(base_model, method, cv) CalibratedClassifierCV
+    }
+
+    class evaluation {
+        <<module>>
+        +compute_metrics(y_true, y_prob, threshold) dict
+        +plot_roc_curve(y_true, y_prob, path) Path
+        +plot_precision_recall_curve(y_true, y_prob, path) Path
+        +plot_calibration_curve(curves, path) Path
+        +plot_confusion_matrix(y_true, y_prob, path) Path
+    }
+
+    class policy {
+        <<module>>
+        +evaluate_policy(y_true, y_prob, capacity_fraction) dict
+        +evaluate_policies(y_true, y_prob) DataFrame
+        +cumulative_gains(y_true, y_prob) DataFrame
+        +plot_cumulative_gains(y_true, y_prob, path) Path
+    }
+
+    class experimentation {
+        <<module>>
+        +required_sample_size_per_arm(baseline_rate, absolute_reduction, power) int
+        +minimum_detectable_effect(baseline_rate, n_per_arm, power) dict
+        +build_experiment_design_table(baseline_rate) DataFrame
+    }
+
+    class association {
+        <<module>>
+        +cramers_v(contingency, chi2) float
+        +chi_square_test(df, feature) dict
+        +run_chi_square_suite(df, features) tuple
+    }
+
+    class reporting {
+        <<module>>
+        +count_collected_tests() int
+        +write_resume_facts(summary, ..., path) Path
+    }
+
+    class pipeline {
+        <<module>>
+        +train_and_compare_models(splits) tuple
+        +select_model(validation_metrics) str
+        +choose_calibration(base_model, splits) tuple
+        +evaluate_on_test(model, splits) tuple
+        +run_pipeline(raw_path) PipelineResult
+    }
+
+    class PipelineResult {
+        <<dataclass>>
+        validation_report: dict
+        split_sizes: dict
+        validation_metrics: DataFrame
+        selected_model_name: str
+        calibration_choice: str
+        test_metrics: dict
+        policy_table: DataFrame
+        experiment_table: DataFrame
+        chi_square_summary: DataFrame
+        artifacts: dict
+    }
+
+    class app_config {
+        <<module app.config>>
+        MODEL_VERSION = "churnguard-hgb-calibrated-v1"
+        MAX_BATCH_SIZE = 1000
+        NUMERIC_DRIFT_FEATURES
+        CATEGORICAL_DRIFT_FEATURES
+    }
+
+    class Settings {
+        <<frozen dataclass>>
+        model_path: Path
+        metadata_path: Path
+        reference_path: Path
+        landing_facts_path: Path
+        static_dir: Path
+        figures_dir: Path
+    }
+
+    class Customer {
+        <<schema>>
+        customerID: str | None
+        19 typed raw features
+        TotalCharges: float | None
+        +integer_binary(value)
+        +raw_total_charges(value)
+    }
+
+    class BatchRequest {
+        <<schema>>
+        customers: list~Customer~ (1..1000)
+    }
+
+    class RankRequest {
+        <<schema>>
+        capacity_fraction: float | None
+        top_n: int | None
+        +capacity_is_unambiguous()
+    }
+
+    class Prediction {
+        <<schema>>
+        customer_id: str | None
+        churn_probability: float
+        model_version: str
+    }
+
+    class RankedCustomer {
+        <<schema>>
+        rank: int
+        selected_for_outreach: bool
+    }
+
+    class RankingResult {
+        <<schema>>
+        customers: list~RankedCustomer~
+        total_customers: int
+        selected_count: int
+    }
+
+    class ModelService {
+        <<dataclass>>
+        model: Pipeline
+        metadata: dict
+        checksum_verified: bool
+        +load(settings)$ ModelService
+        +public_info() dict
+    }
+
+    class app_inference {
+        <<module app.inference>>
+        +customers_to_frame(customers) DataFrame
+        +checked_probabilities(model, frame) ndarray
+        +predict_customers(service, customers) list~Prediction~
+    }
+
+    class ranking {
+        <<module app.ranking>>
+        +rank_predictions(predictions, request) RankingResult
+    }
+
+    class monitoring {
+        <<module app.monitoring>>
+        +build_profile(training) dict
+        +load_reference(path) dict
+        +population_stability_index(expected, actual) float
+        +shift_status(value) str
+        +check_drift(frame, profile) dict
+    }
+
+    class ServiceMetrics {
+        requests: Counter
+        errors: Counter
+        predictions: Counter
+        latency: Histogram
+        batch_size: Histogram
+        drift_checks: Counter
+    }
+
+    class landing {
+        <<module app.landing>>
+        +load_facts(path) dict
+        +render_form_fields() str
+        +render_landing_page(facts_path) str
+    }
+
+    class main {
+        <<module app.main>>
+        +create_app(settings) FastAPI
+        GET / and /project-summary
+        GET /health, /ready, /model-info
+        POST /predict, /batch-predict, /rank
+        POST /monitor/drift
+        GET /metrics
+    }
+
+    data ..> config : reads constants
+    data --> DataSplits : creates
+    models ..> features : builds preprocessors
+    pipeline ..> validation : 1. validate
+    pipeline ..> data : 2. prepare and split
+    pipeline ..> models : 3. train and calibrate
+    pipeline ..> evaluation : 4. score test once
+    pipeline ..> policy : 5. capacity policy
+    pipeline ..> experimentation : 6. size an RCT
+    pipeline ..> association : 7. chi-square tests
+    pipeline ..> reporting : 8. resume facts
+    pipeline --> PipelineResult : returns
+    BatchRequest *-- Customer : 1..1000
+    RankRequest --|> BatchRequest
+    RankedCustomer --|> Prediction
+    RankingResult *-- RankedCustomer
+    Settings ..> app_config : paths from
+    Customer ..> config : feature list from
+    ModelService ..> Settings : loads from
+    ModelService ..> app_inference : smoke test
+    ModelService ..> pipeline : loads the artifact it saved
+    app_inference ..> Customer : converts
+    app_inference --> Prediction : creates
+    ranking --> RankingResult : creates
+    monitoring ..> data : reference built from make_splits X_train
+    main --> ModelService : owns one, loaded at startup
+    main --> ServiceMetrics : owns one
+    main ..> app_inference : score
+    main ..> ranking : rank
+    main ..> monitoring : drift
+    main ..> landing : landing page

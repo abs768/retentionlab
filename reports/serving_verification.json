@@ -74,12 +74,12 @@
   ],
   "reference_row_count": 4929,
   "metrics": [
-    "churnguard_inference_requests_total",
-    "churnguard_inference_errors_total",
-    "churnguard_predictions_total",
-    "churnguard_inference_latency_seconds",
-    "churnguard_batch_size",
-    "churnguard_drift_checks_total"
+    "retentionlab_inference_requests_total",
+    "retentionlab_inference_errors_total",
+    "retentionlab_predictions_total",
+    "retentionlab_inference_latency_seconds",
+    "retentionlab_batch_size",
+    "retentionlab_drift_checks_total"
   ],
   "ci": "Configured for Python 3.10/3.12 and Docker; remote run not observed"
 }
